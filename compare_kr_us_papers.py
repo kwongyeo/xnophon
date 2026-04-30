@@ -16,7 +16,7 @@ from pathlib import Path
 
 from pyalex import Works, config
 
-config.email = "research@example.com"  # OpenAlex polite pool
+config.email = "kwongyeo@gmail.com"  # OpenAlex polite pool
 
 
 def search_country(query: str, country_code: str, from_year: int, per_page: int):
