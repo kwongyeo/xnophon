@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>한·미 선행연구 비교 — OpenAlex</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #171a21;
+    --panel-2: #1e222b;
+    --border: #2a2f3a;
+    --text: #e6e8ee;
+    --muted: #9aa3b2;
+    --kr: #4f8cff;
+    --us: #ff6b6b;
+    --accent: #7ee787;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo",
+           "Noto Sans KR", sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.5;
+  }
+  header {
+    padding: 20px 24px; border-bottom: 1px solid var(--border);
+    background: var(--panel); position: sticky; top: 0; z-index: 10;
+  }
+  h1 { margin: 0 0 4px 0; font-size: 18px; }
+  .sub { color: var(--muted); font-size: 13px; }
+  .controls {
+    display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px;
+  }
+  .controls input, .controls select, .controls button {
+    background: var(--panel-2); color: var(--text); border: 1px solid var(--border);
+    padding: 8px 12px; border-radius: 6px; font-size: 14px;
+  }
+  .controls input[type=text] { flex: 1; min-width: 240px; }
+  .controls input[type=number] { width: 80px; }
+  .controls button {
+    background: var(--accent); color: #0f1115; border-color: var(--accent);
+    font-weight: 600; cursor: pointer;
+  }
+  .controls button:hover { filter: brightness(1.1); }
+  .controls button.secondary {
+    background: var(--panel-2); color: var(--text); font-weight: 400;
+  }
+  main { padding: 20px 24px; }
+  .grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+  }
+  @media (max-width: 880px) { .grid { grid-template-columns: 1fr; } }
+  .col {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
+    padding: 16px; min-height: 200px;
+  }
+  .col h2 {
+    margin: 0 0 12px 0; font-size: 15px; padding-bottom: 8px;
+    border-bottom: 2px solid var(--border);
+  }
+  .col.kr h2 { border-bottom-color: var(--kr); }
+  .col.us h2 { border-bottom-color: var(--us); }
+  .badge {
+    display: inline-block; padding: 1px 8px; border-radius: 10px;
+    font-size: 11px; margin-left: 8px;
+  }
+  .col.kr .badge { background: var(--kr); color: white; }
+  .col.us .badge { background: var(--us); color: white; }
+  .paper {
+    padding: 10px 0; border-bottom: 1px dashed var(--border);
+  }
+  .paper:last-child { border-bottom: none; }
+  .paper .title {
+    font-weight: 600; font-size: 14px; margin-bottom: 4px;
+  }
+  .paper .title a { color: var(--text); text-decoration: none; }
+  .paper .title a:hover { color: var(--accent); }
+  .paper .meta {
+    color: var(--muted); font-size: 12px;
+  }
+  .paper .cited {
+    display: inline-block; color: var(--accent); font-weight: 600;
+  }
+  .empty { color: var(--muted); font-size: 13px; padding: 30px 0; text-align: center; }
+  .status {
+    margin: 12px 0; padding: 10px 14px; border-radius: 6px;
+    background: var(--panel-2); border: 1px solid var(--border);
+    color: var(--muted); font-size: 13px;
+  }
+  .status.error { color: #ff8a8a; border-color: #5a2a2a; background: #2a1717; }
+  .spinner {
+    display: inline-block; width: 12px; height: 12px;
+    border: 2px solid var(--muted); border-top-color: var(--accent);
+    border-radius: 50%; animation: spin 0.8s linear infinite;
+    vertical-align: middle; margin-right: 6px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  footer {
+    padding: 16px 24px; color: var(--muted); font-size: 12px;
+    border-top: 1px solid var(--border); margin-top: 20px;
+  }
+  footer a { color: var(--accent); }
+</style>
+</head>
+<body>
+<header>
+  <h1>한·미 선행연구 비교 (OpenAlex)</h1>
+  <div class="sub">주제어를 입력하면 한국(KR)과 미국(US)의 논문을 인용수 순으로 나란히 보여줍니다.</div>
+  <div class="controls">
+    <input id="q" type="text" placeholder="검색어 (예: large language model education)" />
+    <select id="year">
+      <option value="2024">2024년 이후</option>
+      <option value="2022" selected>2022년 이후</option>
+      <option value="2020">2020년 이후</option>
+      <option value="2015">2015년 이후</option>
+      <option value="2000">2000년 이후</option>
+    </select>
+    <input id="count" type="number" min="1" max="50" value="15" title="국가별 결과 수" />
+    <button id="searchBtn">검색</button>
+    <button id="saveBtn" class="secondary" title="결과를 Markdown으로 저장">저장</button>
+  </div>
+</header>
+
+<main>
+  <div id="status" class="status" hidden></div>
+  <div class="grid">
+    <section class="col kr">
+      <h2>한국 KR <span id="krCount" class="badge">0</span></h2>
+      <div id="krList"><div class="empty">검색어를 입력하세요.</div></div>
+    </section>
+    <section class="col us">
+      <h2>미국 US <span id="usCount" class="badge">0</span></h2>
+      <div id="usList"><div class="empty">검색어를 입력하세요.</div></div>
+    </section>
+  </div>
+</main>
+
+<footer>
+  데이터: <a href="https://openalex.org/" target="_blank" rel="noopener">OpenAlex</a> · API 키 없이 동작 ·
+  polite pool email: <code>kwongyeo@gmail.com</code>
+</footer>
+
+<script>
+const POLITE_EMAIL = "kwongyeo@gmail.com";
+const $ = (id) => document.getElementById(id);
+let lastResult = null;
+
+async function searchCountry(query, country, fromYear, perPage) {
+  const params = new URLSearchParams({
+    search: query,
+    filter: `authorships.countries:${country},from_publication_date:${fromYear}-01-01`,
+    sort: "cited_by_count:desc",
+    "per-page": String(perPage),
+    mailto: POLITE_EMAIL,
+  });
+  const url = `https://api.openalex.org/works?${params}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`OpenAlex ${res.status}: ${await res.text()}`);
+  const data = await res.json();
+  return (data.results || []).map(toRow);
+}
+
+function toRow(w) {
+  const authors = (w.authorships || []).slice(0, 3)
+    .map(a => a.author?.display_name).filter(Boolean).join(", ");
+  return {
+    title: w.title || "(제목 없음)",
+    year: w.publication_year || "",
+    authors: authors || "(저자 미상)",
+    venue: w.primary_location?.source?.display_name || "",
+    cited: w.cited_by_count || 0,
+    doi: w.doi || "",
+    url: w.id || "",
+  };
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[c]));
+}
+
+function renderList(rows, el) {
+  if (!rows.length) {
+    el.innerHTML = `<div class="empty">결과가 없습니다.</div>`;
+    return;
+  }
+  el.innerHTML = rows.map((r, i) => `
+    <div class="paper">
+      <div class="title">
+        ${i + 1}.
+        <a href="${escapeHtml(r.url)}" target="_blank" rel="noopener">${escapeHtml(r.title)}</a>
+      </div>
+      <div class="meta">
+        ${escapeHtml(r.authors)} · ${escapeHtml(String(r.year))}
+        ${r.venue ? "· " + escapeHtml(r.venue) : ""}
+        · <span class="cited">인용 ${r.cited}</span>
+      </div>
+    </div>
+  `).join("");
+}
+
+function setStatus(msg, isError = false) {
+  const s = $("status");
+  if (!msg) { s.hidden = true; return; }
+  s.hidden = false;
+  s.classList.toggle("error", isError);
+  s.innerHTML = msg;
+}
+
+async function runSearch() {
+  const query = $("q").value.trim();
+  if (!query) { setStatus("검색어를 입력하세요.", true); return; }
+  const fromYear = parseInt($("year").value, 10);
+  const perCountry = Math.max(1, Math.min(50, parseInt($("count").value, 10) || 15));
+
+  setStatus(`<span class="spinner"></span>검색 중: <b>${escapeHtml(query)}</b> (${fromYear}년 이후, 국가별 ${perCountry}편)`);
+  $("krList").innerHTML = `<div class="empty">로딩 중...</div>`;
+  $("usList").innerHTML = `<div class="empty">로딩 중...</div>`;
+
+  try {
+    const [kr, us] = await Promise.all([
+      searchCountry(query, "KR", fromYear, perCountry),
+      searchCountry(query, "US", fromYear, perCountry),
+    ]);
+    renderList(kr, $("krList"));
+    renderList(us, $("usList"));
+    $("krCount").textContent = kr.length;
+    $("usCount").textContent = us.length;
+    lastResult = { query, fromYear, kr, us };
+    setStatus(`완료. 한국 ${kr.length}편 / 미국 ${us.length}편.`);
+  } catch (e) {
+    setStatus("오류: " + escapeHtml(e.message), true);
+  }
+}
+
+function saveMarkdown() {
+  if (!lastResult) { setStatus("저장할 검색 결과가 없습니다.", true); return; }
+  const { query, fromYear, kr, us } = lastResult;
+  const tableOf = (rows, head) => {
+    if (!rows.length) return `### ${head}\n\n(결과 없음)\n`;
+    const lines = [`### ${head} (${rows.length}편)`, ""];
+    rows.forEach((r, i) => {
+      lines.push(`${i + 1}. **${r.title}** — ${r.authors} (${r.year})${r.venue ? " — " + r.venue : ""} — 인용 ${r.cited} — <${r.url}>`);
+    });
+    return lines.join("\n") + "\n";
+  };
+  const md = `# 선행연구: ${query}\n\nOpenAlex · ${fromYear}년 이후 · 인용수 내림차순\n\n${tableOf(kr, "한국 (KR)")}\n${tableOf(us, "미국 (US)")}`;
+  const safeName = query.replace(/[^\p{L}\p{N}\s_-]/gu, "").trim().replace(/\s+/g, "_") || "literature_review";
+  const blob = new Blob([md], { type: "text/markdown;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `${safeName}.md`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+$("searchBtn").addEventListener("click", runSearch);
+$("saveBtn").addEventListener("click", saveMarkdown);
+$("q").addEventListener("keydown", (e) => { if (e.key === "Enter") runSearch(); });
+</script>
+</body>
+</html>

@@ -11,7 +11,12 @@ python3 -m venv .venv
 
 ## 사용
 
-### 1) 챗봇 모드 (권장)
+### 1) 웹 브라우저 (가장 간단)
+
+`index.html` 파일을 더블클릭해서 브라우저로 열면 끝. 백엔드·설치 불필요.
+주제어 입력 → KR/US 논문 인용수 내림차순 비교 → 저장 버튼으로 Markdown 다운로드.
+
+### 2) 챗봇 모드 (CLI)
 
 ```bash
 .venv/bin/python chatbot.py
@@ -20,7 +25,7 @@ python3 -m venv .venv
 - `ANTHROPIC_API_KEY` 환경변수가 있으면 **Claude Opus 4.7**이 자연어로 대화하며 OpenAlex 도구를 호출해 한·미 논문을 검색·비교·요약한다.
 - 없으면 명령 기반 간이 REPL로 동작한다 (`/year 2022`, `/count 20`, `/save 이름`, `/help`, `/quit`).
 
-### 2) 일괄 비교 스크립트
+### 3) 일괄 비교 스크립트
 
 ```bash
 .venv/bin/python compare_kr_us_papers.py "large language model education" --from-year 2022 --per-country 30
