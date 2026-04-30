@@ -1,1 +1,2 @@
 pyalex>=0.21
+anthropic>=0.97
