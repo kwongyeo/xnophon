@@ -25,7 +25,14 @@ python3 -m venv .venv
 - `ANTHROPIC_API_KEY` 환경변수가 있으면 **Claude Opus 4.7**이 자연어로 대화하며 OpenAlex 도구를 호출해 한·미 논문을 검색·비교·요약한다.
 - 없으면 명령 기반 간이 REPL로 동작한다 (`/year 2022`, `/count 20`, `/save 이름`, `/help`, `/quit`).
 
-### 3) 일괄 비교 스크립트
+### 3) Claude Skill — 다중 소스 논문 검색 & 원문 다운로드
+
+`.claude/skills/academic-paper-search/` — Consensus, Google Scholar, OpenAlex,
+arXiv, Crossref, ScienceON(국내)을 통합 검색하고 오픈액세스 PDF를 자동 다운로드.
+Claude Code 안에서 "주제로 논문 찾아줘 / 원문 받아줘" 라고 말하면 자동 호출된다.
+자세한 사용법은 `.claude/skills/academic-paper-search/README.md` 참고.
+
+### 4) 일괄 비교 스크립트
 
 ```bash
 .venv/bin/python compare_kr_us_papers.py "large language model education" --from-year 2022 --per-country 30
