@@ -126,7 +126,8 @@
     </select>
     <input id="count" type="number" min="1" max="50" value="15" title="국가별 결과 수" />
     <button id="searchBtn">검색</button>
-    <button id="cpBtn" class="secondary" title="현재 검색어로 Connected Papers 열기">🕸️ CP 검색</button>
+    <button id="cpBtn" class="secondary" title="현재 검색어로 Connected Papers 열기">🕸️ CP</button>
+    <button id="kciBtn" class="secondary" title="현재 검색어로 KCI(한국학술지인용색인) 열기">📖 KCI</button>
     <button id="saveBtn" class="secondary" title="결과를 Markdown으로 저장">저장</button>
   </div>
 </header>
@@ -148,6 +149,7 @@
 <footer>
   데이터: <a href="https://openalex.org/" target="_blank" rel="noopener">OpenAlex</a> ·
   관계 그래프: <a href="https://www.connectedpapers.com/" target="_blank" rel="noopener">Connected Papers</a> ·
+  한국 논문: <a href="https://www.kci.go.kr/" target="_blank" rel="noopener">KCI</a> ·
   추가 검색: <a href="https://www.semanticscholar.org/" target="_blank" rel="noopener">Semantic Scholar</a> /
   <a href="https://scholar.google.com/" target="_blank" rel="noopener">Google Scholar</a> ·
   API 키 없이 동작
@@ -202,6 +204,14 @@ function googleScholarUrl(row) {
   return `https://scholar.google.com/scholar?q=${encodeURIComponent(row.title)}`;
 }
 
+function kciSearchUrl(query) {
+  return `https://www.kci.go.kr/kciportal/po/search/poArtiSear.kci?strQuery=${encodeURIComponent(query)}`;
+}
+
+function kciPaperUrl(row) {
+  return kciSearchUrl(row.title);
+}
+
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
@@ -228,6 +238,7 @@ function renderList(rows, el) {
         <a href="${escapeHtml(connectedPapersUrl(r))}" target="_blank" rel="noopener" title="이 논문 중심의 인용 관계 그래프">🕸️ Connected Papers</a>
         <a href="${escapeHtml(semanticScholarUrl(r))}" target="_blank" rel="noopener" title="Semantic Scholar에서 보기">📚 Semantic Scholar</a>
         <a href="${escapeHtml(googleScholarUrl(r))}" target="_blank" rel="noopener" title="Google Scholar에서 보기">🔍 Google Scholar</a>
+        <a href="${escapeHtml(kciPaperUrl(r))}" target="_blank" rel="noopener" title="KCI(한국학술지인용색인)에서 제목으로 검색">📖 KCI</a>
         ${r.doi ? `<a href="https://doi.org/${encodeURIComponent(r.doi)}" target="_blank" rel="noopener" title="DOI 원문">📄 DOI</a>` : ""}
       </div>
     </div>
@@ -296,8 +307,15 @@ function openConnectedPapersSearch() {
               "_blank", "noopener");
 }
 
+function openKciSearch() {
+  const query = $("q").value.trim();
+  if (!query) { setStatus("검색어를 입력하세요.", true); return; }
+  window.open(kciSearchUrl(query), "_blank", "noopener");
+}
+
 $("searchBtn").addEventListener("click", runSearch);
 $("cpBtn").addEventListener("click", openConnectedPapersSearch);
+$("kciBtn").addEventListener("click", openKciSearch);
 $("saveBtn").addEventListener("click", saveMarkdown);
 $("q").addEventListener("keydown", (e) => { if (e.key === "Enter") runSearch(); });
 </script>
