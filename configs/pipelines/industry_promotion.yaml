@@ -1,0 +1,18 @@
+# 산업진흥비 패널 정의 (참고용 — 현재 코드는 이 값들을 하드코딩하고 있음;
+# YAML 구동 전환은 추후 작업).
+target:
+  level: 광역
+  count: 17
+  years: [2013, 2024]
+fields:
+  - "090"   # 산업·중소기업 및 에너지
+  - "120"   # 과학기술
+accounting:
+  include: [일반회계, 특별회계]
+  exclude: [기금]
+value:
+  type: 결산액
+  unit: 천원
+  basis: 명목
+source:
+  primary: "지방재정365 (lofin.mois.go.kr) 「세출예산 분야별 현황」"

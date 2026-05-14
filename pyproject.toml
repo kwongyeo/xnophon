@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lgstats"
+version = "0.1.0"
+description = "Korean local-government statistics extraction & panel-building automation"
+requires-python = ">=3.10"
+dependencies = [
+    "pandas>=2.0",
+    "openpyxl>=3.1",
+    "PublicDataReader>=1.1",
+    "PyYAML>=6.0",
+]
+
+[project.scripts]
+lgstats = "lgstats.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

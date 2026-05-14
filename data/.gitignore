@@ -1,0 +1,6 @@
+# 원본·중간·최종 데이터는 모두 git 추적 제외 (용량/저작권)
+# 단 메타데이터(MANIFEST.csv, .gitignore, README) 만 추적
+*
+!.gitignore
+!MANIFEST.csv
+!README.md

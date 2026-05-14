@@ -1,0 +1,27 @@
+# KOSIS 변수 정의 — `lgstats kosis-population --config <이 파일>` 로 사용
+# 운영상 표 ID/항목 코드는 변경될 수 있음. 사용 전 `lgstats kosis-discover` 로 검증할 것.
+
+- var_name: pop_total
+  label_kr: "총인구(주민등록, 명)"
+  org_id: "101"
+  tbl_id: DT_1B040A3
+  itm_id: T20
+  prd_se: Y
+  notes: "행정안전부 주민등록인구통계, 연말 기준."
+
+- var_name: pop_elderly_65plus
+  label_kr: "65세 이상 인구(명)"
+  org_id: "101"
+  tbl_id: DT_1B040A3
+  itm_id: T20
+  prd_se: Y
+  obj_l2: "65PLUS"
+  notes: "동일 표 65+ 분류. obj_l2 코드 검증 필요."
+
+- var_name: basic_livelihood_recipients
+  label_kr: "기초생활보장 수급자(명)"
+  org_id: "117"
+  tbl_id: DT_117N_A0021
+  itm_id: T1
+  prd_se: Y
+  notes: "보건복지부. 표 ID 연도별 개편 가능 — discover 권장."
