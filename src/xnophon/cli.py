@@ -23,9 +23,7 @@ import os
 import sys
 from pathlib import Path
 
-from pyalex import Works, config as pyalex_config
-
-pyalex_config.email = "kwongyeo@gmail.com"
+from xnophon.sources import openalex
 
 DEFAULT_FROM_YEAR = 2020
 DEFAULT_PER_COUNTRY = 15
@@ -33,29 +31,7 @@ RESULTS_DIR = Path("results")
 
 
 def search_openalex(query: str, country_code: str, from_year: int, per_page: int) -> list[dict]:
-    works = (
-        Works()
-        .search(query)
-        .filter(authorships={"countries": country_code})
-        .filter(from_publication_date=f"{from_year}-01-01")
-        .sort(cited_by_count="desc")
-        .get(per_page=per_page)
-    )
-    rows = []
-    for w in works:
-        authors = ", ".join(
-            a["author"]["display_name"] for a in (w.get("authorships") or [])[:3]
-        )
-        rows.append({
-            "title": w.get("title") or "(제목 없음)",
-            "year": w.get("publication_year"),
-            "authors": authors,
-            "venue": (w.get("primary_location") or {}).get("source", {}).get("display_name", "") or "",
-            "cited_by": w.get("cited_by_count", 0),
-            "doi": w.get("doi") or "",
-            "url": w.get("id", ""),
-        })
-    return rows
+    return openalex.search(query, country_code, from_year, per_page)
 
 
 def format_table(rows: list[dict], header: str) -> str:

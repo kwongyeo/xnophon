@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "xnophon"
+version = "0.1.0"
+description = "한국·미국 선행연구 비교 도구 (OpenAlex + Connected Papers + KCI 통합)"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "kwongyeo" }]
+dependencies = [
+    "pyalex>=0.21",
+    "anthropic>=0.97",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[project.scripts]
+xnophon-chat = "xnophon.cli:main"
+xnophon-compare = "xnophon.compare:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

@@ -14,37 +14,15 @@ import argparse
 import json
 from pathlib import Path
 
-from pyalex import Works, config
-
-config.email = "kwongyeo@gmail.com"  # OpenAlex polite pool
+from xnophon.sources import openalex
 
 
 def search_country(query: str, country_code: str, from_year: int, per_page: int):
-    pager = (
-        Works()
-        .search(query)
-        .filter(authorships={"countries": country_code})
-        .filter(from_publication_date=f"{from_year}-01-01")
-        .sort(cited_by_count="desc")
-        .get(per_page=per_page)
-    )
-    return pager
+    return openalex.search(query, country_code, from_year, per_page)
 
 
 def to_row(work: dict) -> dict:
-    authors = ", ".join(
-        a["author"]["display_name"]
-        for a in (work.get("authorships") or [])[:3]
-    )
-    return {
-        "title": work.get("title") or "(제목 없음)",
-        "year": work.get("publication_year"),
-        "authors": authors,
-        "venue": (work.get("primary_location") or {}).get("source", {}).get("display_name", ""),
-        "cited_by": work.get("cited_by_count", 0),
-        "doi": work.get("doi") or "",
-        "url": work.get("id", ""),
-    }
+    return work
 
 
 def render_markdown(query: str, kr: list[dict], us: list[dict]) -> str:
