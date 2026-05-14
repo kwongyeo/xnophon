@@ -23,7 +23,7 @@ import os
 import sys
 from pathlib import Path
 
-from xnophon.sources import openalex
+from literature_review.sources import openalex
 
 DEFAULT_FROM_YEAR = 2020
 DEFAULT_PER_COUNTRY = 15

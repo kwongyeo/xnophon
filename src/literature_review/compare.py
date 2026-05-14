@@ -14,7 +14,7 @@ import argparse
 import json
 from pathlib import Path
 
-from xnophon.sources import openalex
+from literature_review.sources import openalex
 
 
 def search_country(query: str, country_code: str, from_year: int, per_page: int):

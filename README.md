@@ -1,37 +1,37 @@
-# xnophon — 한·미 선행연구(문헌검토) 도구
+# literature-review — 한·미 학술논문 선행연구 비교 도구
 
 OpenAlex API + Connected Papers + KCI 딥링크를 통합해 한국과 미국 학술논문을
-주제별로 검색·비교한다. 세 가지 인터페이스를 제공:
+주제별로 검색·비교하는 문헌검토(literature review) 도구. 세 가지 인터페이스를 제공:
 
 1. **웹 UI** (`web/index.html`) — 브라우저 더블클릭으로 즉시 실행. 설치 불필요.
-2. **CLI 챗봇** (`xnophon-chat`) — Claude Opus 4.7과 자연어 대화 또는 명령 REPL.
-3. **일괄 비교 스크립트** (`xnophon-compare`) — 검색 결과를 Markdown 보고서로 저장.
+2. **CLI 챗봇** (`lr-chat`) — Claude Opus 4.7과 자연어 대화 또는 명령 REPL.
+3. **일괄 비교 스크립트** (`lr-compare`) — 검색 결과를 Markdown 보고서로 저장.
 
 ## 디렉터리 구조
 
 ```
-xnophon/
+literature-review/
 ├── README.md
-├── pyproject.toml             패키지 메타 + 의존성 + 실행 진입점
-├── .env.example               API 키 템플릿
+├── pyproject.toml                패키지 메타 + 의존성 + 실행 진입점
+├── .env.example                  API 키 템플릿
 ├── .gitignore
 │
 ├── web/
-│   └── index.html             정적 웹 UI (OpenAlex + CP + KCI 딥링크)
+│   └── index.html                정적 웹 UI (OpenAlex + CP + KCI 딥링크)
 │
-├── src/xnophon/
+├── src/literature_review/
 │   ├── __init__.py
-│   ├── cli.py                 챗봇 진입점 (xnophon-chat)
-│   ├── compare.py             일괄 비교 스크립트 (xnophon-compare)
-│   └── sources/               데이터 소스 어댑터
+│   ├── cli.py                    챗봇 진입점 (lr-chat)
+│   ├── compare.py                일괄 비교 스크립트 (lr-compare)
+│   └── sources/                  데이터 소스 어댑터
 │       ├── openalex.py
 │       └── (kci.py 추후)
 │
 ├── docs/
-│   └── kci-api-setup.md       KCI Open API 키 발급 가이드
+│   └── kci-api-setup.md          KCI Open API 키 발급 가이드
 │
-├── tests/                     pytest 단위 테스트
-└── results/                   검색 결과 출력 (gitignore)
+├── tests/                        pytest 단위 테스트
+└── results/                      검색 결과 출력 (gitignore)
 ```
 
 ## 설치
@@ -41,7 +41,7 @@ python3 -m venv .venv
 .venv/bin/pip install -e .
 ```
 
-`-e .`는 개발 모드 설치로, 소스 수정이 즉시 반영된다. 끝나면 명령어 두 개가 PATH에 노출된다: `xnophon-chat`, `xnophon-compare`.
+`-e .`는 개발 모드 설치로, 소스 수정이 즉시 반영된다. 끝나면 명령어 두 개가 PATH에 노출된다: `lr-chat`, `lr-compare`.
 
 API 키를 사용하려면 `.env.example`을 `.env`로 복사하고 값을 채운다.
 
@@ -61,7 +61,7 @@ start web\\index.html          # Windows
 ### 2) CLI 챗봇
 
 ```bash
-.venv/bin/xnophon-chat
+.venv/bin/lr-chat
 ```
 
 - `ANTHROPIC_API_KEY` 설정 시: **Claude Opus 4.7**이 자연어로 대화하며 OpenAlex 도구를 호출해 한·미 논문을 비교 요약.
@@ -70,7 +70,7 @@ start web\\index.html          # Windows
 ### 3) 일괄 비교
 
 ```bash
-.venv/bin/xnophon-compare "large language model education" --from-year 2022 --per-country 30
+.venv/bin/lr-compare "large language model education" --from-year 2022 --per-country 30
 ```
 
 생성물(`results/`):

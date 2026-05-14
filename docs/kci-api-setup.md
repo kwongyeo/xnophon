@@ -51,12 +51,12 @@ https://open.kci.go.kr/po/openapi/openApiSearch.kci?apiCode=articleSearch&key=<A
 ## 4. CORS 제약
 
 KCI API는 브라우저 직접 호출(`fetch`)을 허용하지 않을 가능성이 높다.
-이 경우 `web/index.html`에서는 호출할 수 없고, Python 측(`src/xnophon/sources/kci.py`)
+이 경우 `web/index.html`에서는 호출할 수 없고, Python 측(`src/literature_review/sources/kci.py`)
 에서만 사용 가능하다. 브라우저 통합이 필요하면 다음 중 택일:
 
 - **로컬 프록시**: Flask/FastAPI로 간단한 프록시(`/kci?title=...`)를 띄워 `index.html`이
   이를 호출하도록 한다.
-- **Python CLI에서만 사용**: `xnophon-chat` / `xnophon-compare` 명령에서만 KCI를
+- **Python CLI에서만 사용**: `lr-chat` / `lr-compare` 명령에서만 KCI를
   병합 검색 소스로 활용한다.
 
 ## 5. 이용 한도
@@ -66,10 +66,10 @@ KCI API는 브라우저 직접 호출(`fetch`)을 허용하지 않을 가능성�
 
 ## 6. 키 발급 완료 후 진행할 작업
 
-키를 알려주시면 `src/xnophon/sources/kci.py`에 다음을 구현해 통합한다:
+키를 알려주시면 `src/literature_review/sources/kci.py`에 다음을 구현해 통합한다:
 
 - [ ] `search(query, page=1, count=20)` 함수 — 제목/키워드 검색
 - [ ] XML → 공통 `PaperRow` 변환
-- [ ] CLI(`xnophon-chat`)에 `search_kci` 도구 노출 (Claude Opus 4.7이 호출 가능)
+- [ ] CLI(`lr-chat`)에 `search_kci` 도구 노출 (Claude Opus 4.7이 호출 가능)
 - [ ] `compare.py`에 KCI 결과 별도 섹션 추가 (한국 결과 보강용)
 - [ ] (선택) 로컬 프록시(`scripts/kci_proxy.py`)로 웹 UI 통합
