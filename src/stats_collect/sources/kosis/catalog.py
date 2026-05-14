@@ -1,7 +1,7 @@
 """KOSIS 통계표 변수 정의.
 
 각 KosisVar 는 패널의 한 컬럼이 되며, KOSIS 「통계자료」 API 호출 파라미터를 캡슐화한다.
-실제 tbl_id / itm_id 는 운영상 변경될 수 있으므로 사용 전 `lgstats discover` 로 검증 권장.
+실제 tbl_id / itm_id 는 운영상 변경될 수 있으므로 사용 전 `stats_collect discover` 로 검증 권장.
 """
 
 from __future__ import annotations

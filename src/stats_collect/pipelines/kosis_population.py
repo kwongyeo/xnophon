@@ -11,10 +11,10 @@ from pathlib import Path
 
 import pandas as pd
 
-from lgstats.common.io import write_panel_xlsx
-from lgstats.common.sido import SIDO, YEARS_DEFAULT
-from lgstats.sources.kosis.catalog import DEFAULT_VARS, KosisVar
-from lgstats.sources.kosis.client import fetch_var_for_sido, get_client
+from stats_collect.common.io import write_panel_xlsx
+from stats_collect.common.sido import SIDO, YEARS_DEFAULT
+from stats_collect.sources.kosis.catalog import DEFAULT_VARS, KosisVar
+from stats_collect.sources.kosis.client import fetch_var_for_sido, get_client
 
 
 def load_vars(config: Path | None) -> list[KosisVar]:

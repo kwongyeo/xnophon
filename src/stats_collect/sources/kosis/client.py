@@ -12,7 +12,7 @@ try:
 except ImportError:
     sys.exit("PublicDataReader 가 필요합니다: pip install PublicDataReader")
 
-from lgstats.sources.kosis.catalog import KosisVar
+from stats_collect.sources.kosis.catalog import KosisVar
 
 
 def get_client():

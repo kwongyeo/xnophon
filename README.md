@@ -45,24 +45,24 @@ python3 -m venv .venv
 
 ---
 
-## lgstats — 자치단체 통계 추출 자동화
+## stats-collect — 통계 데이터 수집
 
-`src/lgstats/` 패키지. 광역·기초자치단체 통계를 출처별 어댑터 + 토픽별 파이프라인으로 추출해 패널 데이터셋(xlsx)으로 빌드한다.
+`src/stats_collect/` 패키지. 한국 광역·기초자치단체 통계를 출처별 어댑터 + 토픽별 파이프라인으로 수집·정제해 패널 데이터셋(xlsx)으로 빌드한다.
 
 ```bash
 pip install -e .
 export KOSIS_API_KEY="..."   # KOSIS 사용 시
 
 # 산업진흥비 패널 (lofin 다운로드 파일을 data/raw/lofin/ 에 두고)
-lgstats industry-promotion --raw-dir data/raw/lofin \
+stats-collect industry-promotion --raw-dir data/raw/lofin \
     --out data/processed/industry_promotion.xlsx
 
 # KOSIS 인구·복지 패널
-lgstats kosis-population --config configs/sources/kosis_vars.yaml \
+stats-collect kosis-population --config configs/sources/kosis_vars.yaml \
     --out data/processed/kosis_population.xlsx
 
 # KOSIS 통계표 검색 (tblId 확인용)
-lgstats kosis-discover --keyword "주민등록인구"
+stats-collect kosis-discover --keyword "주민등록인구"
 ```
 
-구조: `src/lgstats/{common,sources,pipelines}` · `configs/` · `data/{raw,interim,processed}` · `docs/`. 자세한 내용은 `docs/SOURCES.md`, `docs/CODEBOOK.md` 참조.
+구조: `src/stats_collect/{common,sources,pipelines}` · `configs/` · `data/{raw,interim,processed}` · `docs/`. 자세한 내용은 `docs/SOURCES.md`, `docs/CODEBOOK.md` 참조.

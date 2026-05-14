@@ -3,9 +3,9 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "lgstats"
+name = "stats_collect"
 version = "0.1.0"
-description = "Korean local-government statistics extraction & panel-building automation"
+description = "통계 데이터 수집 — Korean local-government statistics extraction & panel-building automation"
 requires-python = ">=3.10"
 dependencies = [
     "pandas>=2.0",
@@ -15,7 +15,7 @@ dependencies = [
 ]
 
 [project.scripts]
-lgstats = "lgstats.cli:main"
+stats-collect = "stats_collect.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

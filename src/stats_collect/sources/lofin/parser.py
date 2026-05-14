@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from lgstats.common.sido import match_name
+from stats_collect.common.sido import match_name
 
 
 _FIELD_CODE_RE = re.compile(r"\b(0?\d{2,3})\b")

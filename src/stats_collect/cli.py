@@ -1,12 +1,12 @@
-"""lgstats 통합 CLI.
+"""stats-collect — 통계 데이터 수집 통합 CLI.
 
 Examples
 --------
-  lgstats industry-promotion --raw-dir data/raw/lofin --out data/processed/industry_promotion.xlsx
-  lgstats industry-promotion --template-only --out data/processed/industry_promotion_template.xlsx
-  lgstats kosis-population --out data/processed/kosis_population.xlsx
-  lgstats kosis-discover --keyword "주민등록인구"
-  lgstats kosis-export-config --out configs/sources/kosis_vars.yaml
+  stats-collect industry-promotion --raw-dir data/raw/lofin --out data/processed/industry_promotion.xlsx
+  stats-collect industry-promotion --template-only --out data/processed/industry_promotion_template.xlsx
+  stats-collect kosis-population --out data/processed/kosis_population.xlsx
+  stats-collect kosis-discover --keyword "주민등록인구"
+  stats-collect kosis-export-config --out configs/sources/kosis_vars.yaml
 """
 
 from __future__ import annotations
@@ -15,8 +15,8 @@ import argparse
 import json
 from pathlib import Path
 
-from lgstats.pipelines import industry_promotion, kosis_population
-from lgstats.sources.kosis.catalog import DEFAULT_VARS
+from stats_collect.pipelines import industry_promotion, kosis_population
+from stats_collect.sources.kosis.catalog import DEFAULT_VARS
 
 
 def _cmd_industry(a: argparse.Namespace) -> None:
@@ -31,7 +31,7 @@ def _cmd_kosis_pop(a: argparse.Namespace) -> None:
 
 
 def _cmd_kosis_discover(a: argparse.Namespace) -> None:
-    from lgstats.sources.kosis.client import discover
+    from stats_collect.sources.kosis.client import discover
     df = discover(a.keyword, start=a.start, limit=a.limit)
     if df is None or df.empty:
         print("검색 결과 없음.")
@@ -57,7 +57,7 @@ def _cmd_kosis_export(a: argparse.Namespace) -> None:
 
 
 def main() -> None:
-    p = argparse.ArgumentParser(prog="lgstats", description=__doc__,
+    p = argparse.ArgumentParser(prog="stats-collect", description=__doc__,
                                 formatter_class=argparse.RawTextHelpFormatter)
     sub = p.add_subparsers(dest="cmd", required=True)
 

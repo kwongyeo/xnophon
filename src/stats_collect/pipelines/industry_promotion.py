@@ -11,10 +11,10 @@ from pathlib import Path
 
 import pandas as pd
 
-from lgstats.common.io import write_panel_xlsx
-from lgstats.common.sido import SIDO, YEARS_DEFAULT
-from lgstats.sources.lofin.fields import INDUSTRY_PROMOTION_CODES
-from lgstats.sources.lofin.parser import ingest_dir
+from stats_collect.common.io import write_panel_xlsx
+from stats_collect.common.sido import SIDO, YEARS_DEFAULT
+from stats_collect.sources.lofin.fields import INDUSTRY_PROMOTION_CODES
+from stats_collect.sources.lofin.parser import ingest_dir
 
 
 COLUMNS = [
