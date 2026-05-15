@@ -6,3 +6,14 @@ build/
 dist/
 results/
 .env
+
+# ai_trader 런타임 산출물
+logs/
+src/ai_trader/data/raw/
+src/ai_trader/data/processed/
+src/ai_trader/data/models/
+*.parquet
+*.duckdb
+*.pkl
+*.ckpt
+.ipynb_checkpoints/

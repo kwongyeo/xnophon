@@ -1,0 +1,16 @@
+# 메인 설정. mode 토글로 backtest/paper/live 전환.
+mode: backtest               # backtest | paper | live
+markets:
+  - src/ai_trader/configs/markets/kr.yaml
+  - src/ai_trader/configs/markets/us.yaml
+strategy: src/ai_trader/configs/strategies/llm_ensemble.yaml
+risk: src/ai_trader/configs/risk.yaml
+
+# 초기 자본
+capital_krw: 10_000_000
+capital_usd: 10_000
+
+# 로깅
+log_level: INFO
+log_dir: logs/
+audit_log: logs/orders.jsonl  # append-only 감사

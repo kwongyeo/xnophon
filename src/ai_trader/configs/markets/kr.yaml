@@ -1,0 +1,13 @@
+name: kr
+timezone: Asia/Seoul
+session:
+  open:  "09:00"
+  close: "15:30"
+  preopen_data: "08:30"      # 데이터 수집·예측 시작
+data_source: kis             # kis | pykrx
+universe:
+  - "005930"                 # 삼성전자
+  - "000660"                 # SK하이닉스
+  - "035420"                 # NAVER
+  - "035720"                 # 카카오
+  - "207940"                 # 삼성바이오로직스

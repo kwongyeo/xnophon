@@ -1,0 +1,17 @@
+# LLM이 SL+RL 신호와 뉴스를 종합해 최종 결정.
+type: llm_ensemble
+llm_model: claude-opus-4-7
+sub_strategies:
+  - src/ai_trader/configs/strategies/sl_lightgbm.yaml
+  - src/ai_trader/configs/strategies/rl_ppo.yaml
+inputs:
+  - price_summary             # 최근 N봉 OHLCV 요약
+  - news_headlines            # 당일 뉴스/공시 헤드라인
+  - sl_signal                 # 지도학습 시그널
+  - rl_signal                 # RL 시그널
+output_schema:
+  action: enum[buy, hold, sell]
+  confidence: float           # 0..1
+  size_pct: float             # 자본 대비 진입 비중
+  rationale: string
+veto_low_confidence: 0.5      # confidence < 0.5이면 hold

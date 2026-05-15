@@ -1,0 +1,31 @@
+# 모든 주문은 체결 직전 risk 게이트를 통과해야 한다.
+
+position_limits:
+  max_position_pct: 0.10       # 단일 종목 ≤ 10% of equity
+  max_sector_pct: 0.30
+  max_symbols: 10
+
+stop_loss:
+  enabled: true
+  pct: 0.05                    # -5%
+  trailing: false
+
+take_profit:
+  enabled: true
+  pct: 0.10                    # +10%
+
+drawdown:
+  max_daily: 0.03              # 일일 -3% 초과시 당일 정지
+  max_total: 0.15              # 누적 -15% 초과시 kill switch
+
+kill_switch:
+  enabled: true
+  trigger_on:
+    - max_total_drawdown
+    - consecutive_losses_5
+    - broker_error_rate_high
+
+# 주문 빈도 제한 (오발주 방지)
+rate_limit:
+  orders_per_minute: 10
+  orders_per_day: 100

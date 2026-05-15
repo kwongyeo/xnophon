@@ -16,11 +16,24 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8"]
+dev = ["pytest>=8", "ruff>=0.5"]
+# ai_trader 서브프로젝트 (src/ai_trader/) 의존성 — 별도 extra로 분리.
+ai-trader = [
+    "pyyaml>=6",
+    "pandas>=2",
+    "numpy>=1.26",
+    "python-dotenv>=1",
+    "requests>=2.31",
+]
+ai-trader-data = ["pykrx>=1.0", "yfinance>=0.2", "duckdb>=1"]
+ai-trader-ml   = ["scikit-learn>=1.4", "lightgbm>=4"]
+ai-trader-rl   = ["gymnasium>=0.29", "stable-baselines3>=2.3"]
+# llm은 기본 dependencies의 anthropic을 공유.
 
 [project.scripts]
 lr-chat = "literature_review.cli:main"
 lr-compare = "literature_review.compare:main"
+trader = "ai_trader.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

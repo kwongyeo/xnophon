@@ -1,0 +1,13 @@
+name: us
+timezone: America/New_York
+session:
+  open:  "09:30"
+  close: "16:00"
+  preopen_data: "09:00"
+data_source: kis             # kis | yfinance
+universe:
+  - AAPL
+  - MSFT
+  - NVDA
+  - GOOGL
+  - AMZN

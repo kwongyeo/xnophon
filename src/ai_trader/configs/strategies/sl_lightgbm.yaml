@@ -1,0 +1,17 @@
+type: supervised
+model: lightgbm
+features:
+  - rsi_14
+  - macd
+  - bb_position
+  - volume_ratio_20
+  - return_5d
+  - return_20d
+target: next_day_return
+thresholds:
+  buy:  0.005
+  sell: -0.005
+hyperparams:
+  n_estimators: 500
+  learning_rate: 0.05
+  max_depth: 6

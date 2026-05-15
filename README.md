@@ -1,3 +1,19 @@
+# xnophon — 모노레포
+
+두 개의 서브프로젝트를 포함한다:
+
+1. **literature-review** (`src/literature_review/`) — 한·미 학술논문 비교 도구 (아래 본문)
+2. **ai_trader** (`src/ai_trader/`) — AI 기반 한국·미국 주식 자동매매 (SL + RL + LLM). 상세: [`src/ai_trader/README.md`](src/ai_trader/README.md)
+
+설치는 필요한 서브프로젝트의 extra를 지정한다:
+
+```bash
+pip install -e ".[dev]"                                       # literature-review만
+pip install -e ".[ai-trader,ai-trader-data,ai-trader-ml,dev]" # ai_trader 포함
+```
+
+---
+
 # literature-review — 한·미 학술논문 선행연구 비교 도구
 
 OpenAlex API + Connected Papers + KCI 딥링크를 통합해 한국과 미국 학술논문을
