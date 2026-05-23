@@ -28,6 +28,20 @@ echo "export PATH=\"$CLAUDE_PROJECT_DIR/.venv/bin:\$PATH\"" >> "$CLAUDE_ENV_FILE
 # Pre-warm the npx cache so the MCP server starts without a cold download.
 npx --yes @playwright/mcp@latest --help >/dev/null 2>&1 || true
 
+# --- hwpilot CLI (required by the hwpilot skill) -------------------------
+# Not published to npm — build from GitHub and install globally.
+# Requires `bun` for the postbuild step (preinstalled at /root/.bun/bin).
+if ! command -v hwpilot >/dev/null 2>&1; then
+  if [ -d /root/.bun/bin ]; then
+    export PATH="/root/.bun/bin:$PATH"
+    echo 'export PATH="/root/.bun/bin:$PATH"' >> "$CLAUDE_ENV_FILE"
+  fi
+  HWPILOT_SRC="$(mktemp -d)/hwpilot"
+  git clone --depth 1 https://github.com/devxoul/hwpilot.git "$HWPILOT_SRC" >/dev/null 2>&1
+  (cd "$HWPILOT_SRC" && npm install --silent && npm run build --silent) >/dev/null 2>&1
+  npm install -g "$HWPILOT_SRC" >/dev/null 2>&1 || true
+fi
+
 # Install Chromium only if the container hasn't already provisioned it.
 # (Container images may pre-stage browsers at /opt/pw-browsers — respect that.)
 BROWSERS_PATH="${PLAYWRIGHT_BROWSERS_PATH:-$HOME/.cache/ms-playwright}"
