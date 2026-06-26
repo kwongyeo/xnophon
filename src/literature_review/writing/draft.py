@@ -22,11 +22,31 @@ import json
 from pathlib import Path
 from typing import Any
 
+from literature_review import config
 from literature_review.writing import citations
 
-DEFAULT_MODEL = "claude-opus-4-7"
+DEFAULT_MODEL = config.DEFAULT_MODEL
 
 SECTIONS = ["서론", "선행연구(Related Work)", "본론", "결론"]
+
+# 작성 지시는 assets/prompts/draft_ko.md 에서 읽고, 파일이 없으면 아래 기본값을 쓴다.
+# (파일로 분리해 코드 수정 없이 문체·구조 규칙을 바꿀 수 있게 한다.)
+_DEFAULT_SYSTEM = (
+    "너는 학술 논문 초안을 작성하는 연구 보조자다. 다음 규칙을 반드시 지킨다.\n"
+    "1) 아래 '인용 풀'에 있는 문헌만 인용한다. 풀에 없는 문헌·저자·DOI를 "
+    "절대 새로 지어내지 않는다(인용 위조 금지).\n"
+    "2) 모든 인용은 대괄호 BibTeX 키 형식 [key] 로 본문에 단다. 예: [kim2023large].\n"
+    "3) 구성: 서론 → 선행연구(Related Work) → 본론 → 결론. 선행연구 절에서는 "
+    "한국(KR)과 미국(US) 연구 동향의 차이를 반드시 대비한다.\n"
+    "4) 한국어 학술 문체로 쓰고, 마지막에 '## References' 절에 본문에서 실제로 "
+    "인용한 키만 [key] 목록으로 정리한다.\n"
+    "5) 출력은 Markdown 한 편의 초안이며, 메타 설명 없이 본문만 출력한다."
+)
+
+
+def load_system_prompt() -> str:
+    """작성 지시 시스템 프롬프트를 assets/prompts/draft_ko.md 에서 로드(없으면 기본값)."""
+    return config.load_prompt("draft_ko.md", _DEFAULT_SYSTEM).strip()
 
 
 def _ensure_ids(items: list[dict[str, Any]]) -> None:
@@ -70,17 +90,7 @@ def reference_lines(items: list[dict[str, Any]]) -> list[str]:
 def build_messages(topic: str, items: list[dict[str, Any]]) -> tuple[str, str]:
     """(system, user) 프롬프트를 구성한다. 인용 위조 금지 제약을 명시."""
     refs = "\n".join(reference_lines(items))
-    system = (
-        "너는 학술 논문 초안을 작성하는 연구 보조자다. 다음 규칙을 반드시 지킨다.\n"
-        "1) 아래 '인용 풀'에 있는 문헌만 인용한다. 풀에 없는 문헌·저자·DOI를 "
-        "절대 새로 지어내지 않는다(인용 위조 금지).\n"
-        "2) 모든 인용은 대괄호 BibTeX 키 형식 [key] 로 본문에 단다. 예: [kim2023large].\n"
-        "3) 구성: 서론 → 선행연구(Related Work) → 본론 → 결론. 선행연구 절에서는 "
-        "한국(KR)과 미국(US) 연구 동향의 차이를 반드시 대비한다.\n"
-        "4) 한국어 학술 문체로 쓰고, 마지막에 '## References' 절에 본문에서 실제로 "
-        "인용한 키만 [key] 목록으로 정리한다.\n"
-        "5) 출력은 Markdown 한 편의 초안이며, 메타 설명 없이 본문만 출력한다."
-    )
+    system = load_system_prompt()
     user = (
         f"# 주제\n{topic}\n\n"
         f"# 인용 풀 (이 목록의 [key]만 사용 가능)\n{refs}\n\n"

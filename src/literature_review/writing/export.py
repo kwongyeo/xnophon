@@ -22,10 +22,10 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 from pathlib import Path
 from typing import Any
 
+from literature_review import config
 from literature_review.writing import citations
 
 
@@ -147,8 +147,8 @@ def main():
         description="문헌검토 결과를 논문 작성 도구용 인용 풀(CSL-JSON/BibTeX)로 내보낸다."
     )
     parser.add_argument("query", nargs="?", help="검색 주제 (생략 시 --from-results 필요)")
-    parser.add_argument("--from-year", type=int, default=2020)
-    parser.add_argument("--per-country", type=int, default=25)
+    parser.add_argument("--from-year", type=int, default=config.DEFAULT_FROM_YEAR)
+    parser.add_argument("--per-country", type=int, default=config.DEFAULT_PER_COUNTRY)
     parser.add_argument(
         "--from-results",
         action="store_true",
@@ -158,24 +158,29 @@ def main():
         "--topic",
         help="--from-results 모드에서 브리프에 표시할 주제 라벨(미지정 시 query 사용).",
     )
-    parser.add_argument("--out-dir", default="results", help="출력 디렉터리(기본 results/).")
+    parser.add_argument(
+        "--out-dir",
+        default=None,
+        help="출력 디렉터리(기본 results/<주제-slug>/).",
+    )
     parser.add_argument(
         "--no-kci",
         action="store_true",
         help="KCI_API_KEY가 있어도 KCI 한국어 논문 병합을 생략한다.",
     )
-    parser.add_argument("--kci-count", type=int, default=20, help="KCI에서 가져올 논문 수.")
+    parser.add_argument(
+        "--kci-count", type=int, default=config.DEFAULT_KCI_COUNT, help="KCI에서 가져올 논문 수."
+    )
     args = parser.parse_args()
 
-    out_dir = Path(args.out_dir)
+    topic = args.topic or args.query or "(주제 미지정)"
+    out_dir = Path(args.out_dir) if args.out_dir else config.topic_dir(topic)
 
     if args.from_results:
-        topic = args.topic or args.query or "(주제 미지정)"
         items = _load_from_results(out_dir)
     else:
         if not args.query:
             parser.error("검색어(query)를 지정하거나 --from-results 를 사용하세요.")
-        topic = args.topic or args.query
         from literature_review.sources import openalex
 
         kr = openalex.search_csl(args.query, "KR", args.from_year, args.per_country)
@@ -183,7 +188,7 @@ def main():
         groups = [kr, us]
 
         # KCI 한국어 논문 보강(키가 있고 --no-kci가 아닐 때만). 실패는 비치명적.
-        if not args.no_kci and os.environ.get("KCI_API_KEY"):
+        if not args.no_kci and config.kci_key():
             try:
                 from literature_review.sources import kci
 

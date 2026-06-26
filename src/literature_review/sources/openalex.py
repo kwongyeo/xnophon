@@ -6,13 +6,14 @@ ISO 국가 코드로 저자 국적 필터링이 가능해 한·미 비교에 적
 
 from __future__ import annotations
 
-import os
 from typing import TypedDict
 
 from pyalex import Works, config as pyalex_config
 
+from literature_review import config
+
 # polite pool 이메일은 환경변수가 있으면 그것을, 없으면 기본값 사용.
-pyalex_config.email = os.environ.get("OPENALEX_EMAIL", "kwongyeo@gmail.com")
+pyalex_config.email = config.openalex_email()
 
 
 class PaperRow(TypedDict):

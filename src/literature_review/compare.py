@@ -12,8 +12,8 @@ from __future__ import annotations
 
 import argparse
 import json
-from pathlib import Path
 
+from literature_review import config
 from literature_review.sources import openalex
 
 
@@ -46,12 +46,15 @@ def render_markdown(query: str, kr: list[dict], us: list[dict]) -> str:
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("query", help="검색 주제 (예: 'large language model education')")
-    parser.add_argument("--from-year", type=int, default=2020)
-    parser.add_argument("--per-country", type=int, default=25)
+    parser.add_argument("--from-year", type=int, default=config.DEFAULT_FROM_YEAR)
+    parser.add_argument("--per-country", type=int, default=config.DEFAULT_PER_COUNTRY)
+    parser.add_argument(
+        "--out-dir", default=None, help="출력 디렉터리(기본 results/<주제-slug>/)."
+    )
     args = parser.parse_args()
 
-    out = Path("results")
-    out.mkdir(exist_ok=True)
+    out = Path(args.out_dir) if args.out_dir else config.topic_dir(args.query)
+    out.mkdir(parents=True, exist_ok=True)
 
     kr_raw = search_country(args.query, "KR", args.from_year, args.per_country)
     us_raw = search_country(args.query, "US", args.from_year, args.per_country)
@@ -63,7 +66,7 @@ def main():
     us_rows = [to_row(w) for w in us_raw]
 
     (out / "literature_review.md").write_text(render_markdown(args.query, kr_rows, us_rows))
-    print(f"완료: results/literature_review.md (KR {len(kr_rows)} / US {len(us_rows)})")
+    print(f"완료: {out / 'literature_review.md'} (KR {len(kr_rows)} / US {len(us_rows)})")
 
 
 if __name__ == "__main__":
