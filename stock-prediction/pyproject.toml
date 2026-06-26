@@ -3,9 +3,9 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "stock-prediction"
-version = "0.1.0"
-description = "한국·미국 주식 수익률 예측 알고리즘 연구 파이프라인 (가격·재무·거시·심리 데이터 통합)"
+name = "jutamjuye"
+version = "0.2.0"
+description = "주탐주예(主探主豫) — 주식탐색과 주가예측: 한국·미국 주식 수익률 예측 연구 파이프라인 (가격·재무·거시·심리 통합)"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
@@ -38,6 +38,8 @@ sp-stage3 = "stock_prediction.stage3:main"
 sp-regime = "stock_prediction.regime_strategy:main"
 sp-neutral = "stock_prediction.neutral:main"
 sp-final = "stock_prediction.capstone:main"
+sp-sector = "stock_prediction.sector_neutral:main"
+sp-stage4 = "stock_prediction.stage4:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

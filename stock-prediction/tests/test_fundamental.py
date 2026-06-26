@@ -63,3 +63,36 @@ def test_quarterly_ttm_cumulative_to_standalone(tmp_path):
     # 2024Q3 TTM = Q4_2023 + Q1+Q2+Q3_2024. Q4_2023=FY2023-9M_2023(없음) → 연속불가로 스킵 기대
     # → 최소한 BS는 분기말 시점값(2024Q4=FY2024 자산 1100)
     assert abs(q4["assets"] - 1100) < 1e-9
+
+
+def test_attention_pit_join():
+    """관심도(주별)가 주 종료 후에만(available_at) 보이는지 — 누수 방지."""
+    import numpy as np, pandas as pd
+    from stock_prediction.features.sentiment import (add_attention_features,
+                                                     SENT_FEATURE_COLUMNS)
+    dates = pd.bdate_range("2024-01-01", periods=30)
+    prices = pd.DataFrame({"date": dates, "ticker": "005930",
+                           "adj_close": np.arange(30.0)})
+    # 주 시작 2024-01-08 → available_at 2024-01-15 부터 적용
+    att = pd.DataFrame({"ticker": ["005930"],
+                        "available_at": [pd.Timestamp("2024-01-15")],
+                        "s_attention": [1.5], "s_attention_chg": [0.2]})
+    out = add_attention_features(prices, att)
+    assert out[out["date"] < "2024-01-15"]["s_attention"].isna().all()
+    assert (out[out["date"] >= "2024-01-15"]["s_attention"] == 1.5).all()
+    for c in SENT_FEATURE_COLUMNS:
+        assert c in out.columns
+
+
+def test_sector_neutralize_removes_sector_mean():
+    import numpy as np, pandas as pd
+    from stock_prediction.baseline import sector_neutralize
+    # 한 날짜, 두 섹터. 섹터 평균 차감 후 섹터 내 합은 0이어야.
+    df = pd.DataFrame({
+        "date": pd.to_datetime(["2024-01-01"] * 4),
+        "ticker": ["A", "B", "C", "D"], "sector": ["T", "T", "F", "F"],
+        "x": [10.0, 20.0, 100.0, 140.0],
+    })
+    out = sector_neutralize(df, ["x"])
+    t = out[out.sector == "T"]["x"]; f = out[out.sector == "F"]["x"]
+    assert abs(t.sum()) < 1e-9 and abs(f.sum()) < 1e-9   # 섹터 평균 제거됨

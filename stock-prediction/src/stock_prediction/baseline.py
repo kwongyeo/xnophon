@@ -77,6 +77,21 @@ def market_of(ticker: str) -> str:
     return "KR" if str(ticker)[:6].isdigit() and len(str(ticker)) <= 6 else "US"
 
 
+def sector_neutralize(df: pd.DataFrame, cols: list[str],
+                      sector_col: str = "sector") -> pd.DataFrame:
+    """섹터 편향 제거: (날짜,섹터) 평균을 빼고 (날짜) 표준편차로 스케일.
+
+    종목 수가 적어 섹터 내 완전 zscore의 std가 불안정한 점을 보완 — 섹터 평균만
+    차감하므로 싱글턴 섹터(평균=자기자신→0)도 안전. 누수 없음(그날 단면만 사용).
+    """
+    df = df.copy()
+    gd = df.groupby("date")
+    gds = df.groupby(["date", sector_col])
+    for c in cols:
+        df[c] = (df[c] - gds[c].transform("mean")) / gd[c].transform("std").replace(0, np.nan)
+    return df
+
+
 def _fit_windows(cfg: dict, n_dates: int, horizon: int):
     """config 윈도가 데이터보다 크면 PoC 규모로 자동 축소."""
     s = cfg["split"]
