@@ -80,10 +80,17 @@ def _fit_windows(cfg: dict, n_dates: int, horizon: int):
     return tr, te, st, emb
 
 
-def run_models(panel: pd.DataFrame, cfg: dict, horizon: int) -> dict:
+def run_models(panel: pd.DataFrame, cfg: dict, horizon: int,
+               feature_cols: list[str] | None = None,
+               prefiltered: bool = False) -> dict:
+    """워크포워드 OOS 예측 + 백테스트.
+
+    feature_cols: 사용할 피처 목록(기본 가격/기술적). mom_20 은 Momentum 기준선에 필요.
+    prefiltered: True면 panel이 이미 결측 제거된 공통 샘플(단계 간 공정 비교용).
+    """
     target = f"target_ret_{horizon}d"
-    feat = FEATURE_COLUMNS
-    data = panel.dropna(subset=feat + [target]).copy()
+    feat = list(feature_cols or FEATURE_COLUMNS)
+    data = panel.copy() if prefiltered else panel.dropna(subset=feat + [target]).copy()
     data = cross_sectional_zscore(data, feat).dropna(subset=feat)
 
     dates = np.sort(data["date"].unique())
@@ -95,7 +102,7 @@ def run_models(panel: pd.DataFrame, cfg: dict, horizon: int) -> dict:
     from .models.baseline import MomentumBaseline, RidgeModel
     from .models.tree import TreeModel
 
-    mom_idx = feat.index("mom_20")
+    mom_idx = feat.index("mom_20") if "mom_20" in feat else 0
     builders = {
         "Momentum": lambda: MomentumBaseline(mom_index=mom_idx),
         "Ridge": lambda: RidgeModel(alpha=1.0),
