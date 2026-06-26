@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sudo bash qgis/scripts/setup_qgis_headless.sh",
+            "timeout": 600
+          }
+        ]
+      }
+    ]
+  }
+}

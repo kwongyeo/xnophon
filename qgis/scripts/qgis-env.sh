@@ -16,6 +16,10 @@ mkdir -p "$XDG_RUNTIME_DIR" 2>/dev/null && chmod 700 "$XDG_RUNTIME_DIR" 2>/dev/n
 export QGIS_DISABLE_MESSAGE_HOOKS=1
 # qgis_process 진행률 막대 비활성(로그 깔끔)
 export QGIS_PROCESS_DISABLE_PROGRESS=1
+# GRASS 공급자용 GISBASE 자동 탐지
+if command -v grass >/dev/null 2>&1; then
+  export GISBASE="$(grass --config path 2>/dev/null)"
+fi
 
 # PyQGIS 는 3.12 인터프리터로 실행해야 한다
 alias qpy='python3.12'
