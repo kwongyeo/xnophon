@@ -11,6 +11,7 @@ OpenAlex API + Connected Papers + KCI 딥링크를 통합해 한국과 미국 �
    등 논문 작성 도구의 인용 풀로 바로 사용.
 5. **초안 생성** (`lr-draft`) — 인용 풀에서 Claude(Opus)로 한국어 논문 초안을
    바로 생성. 풀에 있는 문헌만 인용(환각 인용 차단). 외부 도구 없이 자체 완결.
+6. **문서 변환** (`lr-build`) — 초안 + BibTeX를 Pandoc으로 PDF/DOCX/LaTeX 변환.
 
 ## 디렉터리 구조
 
@@ -30,11 +31,12 @@ literature-review/
 │   ├── compare.py                일괄 비교 스크립트 (lr-compare)
 │   ├── sources/                  데이터 소스 어댑터
 │   │   ├── openalex.py
-│   │   └── (kci.py 추후)
+│   │   └── kci.py                KCI 한국어 논문 검색 (XML)
 │   └── writing/                  논문 작성 도구 연계
 │       ├── citations.py          CSL-JSON / BibTeX 변환기
 │       ├── export.py             인용 풀·브리프 내보내기 (lr-export)
-│       └── draft.py              Claude 초안 생성 (lr-draft)
+│       ├── draft.py              Claude 초안 생성 (lr-draft)
+│       └── build.py              Pandoc 문서 변환 (lr-build)
 │
 ├── docs/
 │   └── kci-api-setup.md          KCI Open API 키 발급 가이드
@@ -100,6 +102,9 @@ start web\\index.html          # Windows
 .venv/bin/lr-export --from-results --topic "LLM in education"
 ```
 
+`KCI_API_KEY`가 설정돼 있으면 KCI 한국어 논문을 자동으로 KR 풀에 병합한다
+(영문 DB가 약한 한국어 인문·사회과학 보강). 생략하려면 `--no-kci`.
+
 생성물(`results/`):
 - `citations.csl.json` — CSL-JSON 인용 풀 (Zotero·Pandoc·opendraft 공통 표준)
 - `citations.bib` — BibTeX (LaTeX 작성용)
@@ -120,14 +125,27 @@ start web\\index.html          # Windows
 생성물: `results/draft.md` — 서론 → 선행연구(KR/US 대비) → 본론 → 결론 구조.
 **인용 풀에 있는 문헌만** `[key]` 형식으로 인용하도록 강제해 환각 인용을 막는다.
 
+### 6) 문서 변환 (Pandoc)
+
+초안과 BibTeX를 합쳐 인용·참고문헌이 들어간 최종 문서를 만든다.
+
+```bash
+.venv/bin/lr-build --format pdf            # results/draft.md → results/draft.pdf
+.venv/bin/lr-build --format docx,latex     # 여러 포맷 한 번에
+.venv/bin/lr-build --format pdf --pdf-engine xelatex   # 한글 PDF 권장
+```
+
+[Pandoc](https://pandoc.org) 설치가 필요하다(PDF는 LaTeX 엔진도 필요). `citations.bib`가
+있으면 `--citeproc`로 본문 `[key]` 인용을 자동 변환하고 참고문헌 목록을 생성한다.
+
 ## 논문 작성 자동화 파이프라인
 
-`literature-review`(검색·비교)에서 논문 초안까지 이어지는 흐름:
+`literature-review`(검색·비교)에서 최종 문서까지 이어지는 흐름:
 
 ```
-lr-compare / lr-chat  →  lr-export  →  lr-draft (자체 완결)
- (검색·비교)            (인용 풀·브리프)   └ 또는 → opendraft 등 외부 도구
-                                            (PDF/Word/LaTeX)
+lr-compare / lr-chat  →  lr-export  →  lr-draft  →  lr-build
+ (검색·비교)            (인용 풀·브리프)  (Claude 초안)  (PDF/DOCX/LaTeX)
+   + KCI 한국어 보강                  └ 또는 → opendraft 등 외부 도구
 ```
 
 `lr-export`가 만드는 인용 풀은 표준 포맷이라 `lr-draft`(Claude) 외에 opendraft,

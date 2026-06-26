@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from pathlib import Path
 from typing import Any
 
@@ -158,6 +159,12 @@ def main():
         help="--from-results 모드에서 브리프에 표시할 주제 라벨(미지정 시 query 사용).",
     )
     parser.add_argument("--out-dir", default="results", help="출력 디렉터리(기본 results/).")
+    parser.add_argument(
+        "--no-kci",
+        action="store_true",
+        help="KCI_API_KEY가 있어도 KCI 한국어 논문 병합을 생략한다.",
+    )
+    parser.add_argument("--kci-count", type=int, default=20, help="KCI에서 가져올 논문 수.")
     args = parser.parse_args()
 
     out_dir = Path(args.out_dir)
@@ -173,7 +180,20 @@ def main():
 
         kr = openalex.search_csl(args.query, "KR", args.from_year, args.per_country)
         us = openalex.search_csl(args.query, "US", args.from_year, args.per_country)
-        items = merge_pool(kr, us)
+        groups = [kr, us]
+
+        # KCI 한국어 논문 보강(키가 있고 --no-kci가 아닐 때만). 실패는 비치명적.
+        if not args.no_kci and os.environ.get("KCI_API_KEY"):
+            try:
+                from literature_review.sources import kci
+
+                kci_items = kci.search_csl(args.query, count=args.kci_count)
+                print(f"  KCI에서 {len(kci_items)}편 병합")
+                groups.append(kci_items)
+            except Exception as e:  # noqa: BLE001 (보강 소스이므로 실패해도 진행)
+                print(f"  KCI 병합 건너뜀: {e}")
+
+        items = merge_pool(*groups)
 
     paths = write_pool(topic, items, out_dir)
     print(f"완료: 인용 {len(items)}편 내보냄")
