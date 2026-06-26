@@ -29,6 +29,7 @@ literature-review/
 │   ├── __init__.py
 │   ├── cli.py                    챗봇 진입점 (lr-chat)
 │   ├── compare.py                일괄 비교 스크립트 (lr-compare)
+│   ├── web_proxy.py              KCI 실시간 웹 프록시 (lr-kci-proxy)
 │   ├── sources/                  데이터 소스 어댑터
 │   │   ├── openalex.py
 │   │   └── kci.py                KCI 한국어 논문 검색 (XML)
@@ -37,6 +38,9 @@ literature-review/
 │       ├── export.py             인용 풀·브리프 내보내기 (lr-export)
 │       ├── draft.py              Claude 초안 생성 (lr-draft)
 │       └── build.py              Pandoc 문서 변환 (lr-build)
+│
+├── scripts/
+│   └── kci_proxy.py              lr-kci-proxy 실행 셸
 │
 ├── docs/
 │   └── kci-api-setup.md          KCI Open API 키 발급 가이드
@@ -69,13 +73,25 @@ start web\\index.html          # Windows
 
 주제어 입력 → KR/US 비교 → 각 논문에서 Connected Papers·Semantic Scholar·Google Scholar·KCI 딥링크로 이동 → [저장] 버튼으로 Markdown 다운로드.
 
+**KCI 실시간 병합(선택):** KCI API는 브라우저 직접 호출(CORS)을 막으므로, 로컬 프록시를
+띄우고 같은 주소로 접속하면 KCI 한국어 논문을 KR 목록에 실시간 병합할 수 있다.
+
+```bash
+KCI_API_KEY=<키> .venv/bin/lr-kci-proxy      # http://127.0.0.1:8765 에서 web/ 제공
+# 브라우저로 위 주소 접속 → 'KCI 실시간' 토글 ON → 검색
+```
+
+프록시 없이 `file://`로 열면 토글이 무시되고(병합 실패 안내만 표시) 기존 딥링크는 그대로 동작한다.
+
 ### 2) CLI 챗봇
 
 ```bash
 .venv/bin/lr-chat
 ```
 
-- `ANTHROPIC_API_KEY` 설정 시: **Claude Opus 4.7**이 자연어로 대화하며 OpenAlex 도구를 호출해 한·미 논문을 비교 요약.
+- `ANTHROPIC_API_KEY` 설정 시: **Claude Opus 4.7**이 자연어로 대화하며 OpenAlex(`search_papers`)와
+  KCI(`search_kci`) 도구를 호출해 한·미 논문을 비교 요약. `KCI_API_KEY`가 있으면 한국어 논문을
+  자동으로 보강한다.
 - 미설정 시: 명령 기반 REPL (`/year`, `/count`, `/save`, `/help`, `/quit`).
 
 ### 3) 일괄 비교

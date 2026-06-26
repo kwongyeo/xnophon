@@ -45,6 +45,14 @@
   .controls button.secondary {
     background: var(--panel-2); color: var(--text); font-weight: 400;
   }
+  .controls .toggle {
+    display: inline-flex; align-items: center; gap: 6px;
+    color: var(--muted); font-size: 13px; padding: 8px 4px; cursor: pointer;
+  }
+  .paper .src {
+    display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 8px;
+    font-size: 10px; background: var(--kr); color: white;
+  }
   main { padding: 20px 24px; }
   .grid {
     display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
@@ -128,6 +136,9 @@
     <button id="searchBtn">검색</button>
     <button id="cpBtn" class="secondary" title="현재 검색어로 Connected Papers 열기">🕸️ CP</button>
     <button id="kciBtn" class="secondary" title="현재 검색어로 KCI(한국학술지인용색인) 열기">📖 KCI</button>
+    <label class="toggle" title="로컬 프록시(lr-kci-proxy)가 실행 중일 때 KCI 한국어 논문을 KR 목록에 실시간 병합">
+      <input id="kciLive" type="checkbox" /> KCI 실시간
+    </label>
     <button id="saveBtn" class="secondary" title="결과를 Markdown으로 저장">저장</button>
   </div>
 </header>
@@ -173,6 +184,28 @@ async function searchCountry(query, country, fromYear, perPage) {
   if (!res.ok) throw new Error(`OpenAlex ${res.status}: ${await res.text()}`);
   const data = await res.json();
   return (data.results || []).map(toRow);
+}
+
+// 로컬 프록시(lr-kci-proxy)의 /kci 엔드포인트로 KCI 한국어 논문을 가져온다.
+// 프록시 없이 file://로 열었거나 프록시 미실행이면 fetch가 실패하므로 호출부에서 처리.
+async function searchKci(query, count) {
+  const params = new URLSearchParams({ title: query, count: String(count) });
+  const res = await fetch(`/kci?${params}`);
+  const data = await res.json();
+  if (!res.ok || data.error) throw new Error(data.error || `KCI ${res.status}`);
+  return (Array.isArray(data) ? data : []).map(r => ({ ...r, source: "KCI" }));
+}
+
+// KCI/OpenAlex 결과를 DOI(우선) 또는 제목 기준으로 중복 제거해 병합.
+function mergeRows(primary, extra) {
+  const keyOf = (r) => (r.doi || r.title || "").trim().toLowerCase();
+  const seen = new Set(primary.map(keyOf));
+  const merged = primary.slice();
+  for (const r of extra) {
+    const k = keyOf(r);
+    if (k && !seen.has(k)) { seen.add(k); merged.push(r); }
+  }
+  return merged;
 }
 
 function toRow(w) {
@@ -233,6 +266,7 @@ function renderList(rows, el) {
         ${escapeHtml(r.authors)} · ${escapeHtml(String(r.year))}
         ${r.venue ? "· " + escapeHtml(r.venue) : ""}
         · <span class="cited">인용 ${r.cited}</span>
+        ${r.source === "KCI" ? `<span class="src">KCI</span>` : ""}
       </div>
       <div class="links">
         <a href="${escapeHtml(connectedPapersUrl(r))}" target="_blank" rel="noopener" title="이 논문 중심의 인용 관계 그래프">🕸️ Connected Papers</a>
@@ -264,16 +298,30 @@ async function runSearch() {
   $("usList").innerHTML = `<div class="empty">로딩 중...</div>`;
 
   try {
-    const [kr, us] = await Promise.all([
+    let [kr, us] = await Promise.all([
       searchCountry(query, "KR", fromYear, perCountry),
       searchCountry(query, "US", fromYear, perCountry),
     ]);
+
+    // KCI 실시간 병합(로컬 프록시 필요). 실패해도 OpenAlex 결과는 유지.
+    let kciNote = "";
+    if ($("kciLive").checked) {
+      try {
+        const kci = await searchKci(query, perCountry);
+        const before = kr.length;
+        kr = mergeRows(kr, kci);
+        kciNote = ` · KCI ${kci.length}편 병합(+${kr.length - before})`;
+      } catch (e) {
+        kciNote = ` · KCI 병합 실패: ${escapeHtml(e.message)} (lr-kci-proxy 실행/KCI_API_KEY 확인)`;
+      }
+    }
+
     renderList(kr, $("krList"));
     renderList(us, $("usList"));
     $("krCount").textContent = kr.length;
     $("usCount").textContent = us.length;
     lastResult = { query, fromYear, kr, us };
-    setStatus(`완료. 한국 ${kr.length}편 / 미국 ${us.length}편.`);
+    setStatus(`완료. 한국 ${kr.length}편 / 미국 ${us.length}편.${kciNote}`);
   } catch (e) {
     setStatus("오류: " + escapeHtml(e.message), true);
   }

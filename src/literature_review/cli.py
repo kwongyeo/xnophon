@@ -65,6 +65,8 @@ def run_llm_chatbot():
     import anthropic
     from anthropic import beta_tool
 
+    from literature_review.sources import kci
+
     @beta_tool
     def search_papers(query: str, country: str, from_year: int = 2020, count: int = 15) -> str:
         """OpenAlex에서 특정 국가의 논문을 검색한다.
@@ -78,11 +80,34 @@ def run_llm_chatbot():
         rows = search_openalex(query, country, from_year, min(max(count, 1), 30))
         return json.dumps(rows, ensure_ascii=False)
 
+    @beta_tool
+    def search_kci(query: str, count: int = 20) -> str:
+        """KCI(한국학술지인용색인)에서 한국어 논문을 제목으로 검색한다.
+
+        OpenAlex가 잘 색인하지 못하는 한국어 인문·사회과학 논문 보강에 쓴다.
+        한국 선행연구를 다룰 때 search_papers(KR)와 함께 호출해 결과를 합치면 좋다.
+
+        Args:
+            query: 한국어 제목 검색어 권장.
+            count: 반환할 최대 논문 수 (1-100).
+
+        Returns:
+            논문 목록 JSON. KCI_API_KEY 미설정 시 error 필드를 담은 JSON.
+        """
+        try:
+            rows = kci.search(query, count=min(max(count, 1), 100))
+            return json.dumps(rows, ensure_ascii=False)
+        except Exception as e:  # noqa: BLE001 (도구는 항상 문자열을 돌려줘야 함)
+            return json.dumps({"error": str(e)}, ensure_ascii=False)
+
     client = anthropic.Anthropic()
     system = (
         "너는 한국과 미국의 학술 논문을 비교·요약하는 선행연구(문헌검토) 보조 챗봇이다. "
         "사용자가 주제를 제시하면 search_papers 도구로 KR과 US 양국 논문을 각각 검색해 "
         "인용수·연구 동향·방법론 차이를 한국어로 비교 요약한다. "
+        "한국어 인문·사회과학 주제이거나 한국 논문을 더 폭넓게 보려면 search_kci 도구로 "
+        "KCI 결과를 보강해 KR 목록에 합친다(중복은 제목/DOI로 제거). search_kci가 error를 "
+        "돌려주면(키 미설정 등) 사용자에게 알리고 OpenAlex 결과만으로 진행한다. "
         "각 논문은 [저자(연도)] 형식으로 인용하고, 마지막에 OpenAlex 링크 목록을 제공한다. "
         "검색 결과가 비면 검색어를 영문으로 재시도하거나 사용자에게 재질의한다."
     )
@@ -110,7 +135,7 @@ def run_llm_chatbot():
             thinking={"type": "adaptive"},
             output_config={"effort": "high"},
             system=[{"type": "text", "text": system, "cache_control": {"type": "ephemeral"}}],
-            tools=[search_papers],
+            tools=[search_papers, search_kci],
             messages=turn_messages,
         )
         final_text_parts = []

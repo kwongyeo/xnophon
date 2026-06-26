@@ -72,8 +72,18 @@ KCI API는 브라우저 직접 호출(`fetch`)을 허용하지 않을 가능성�
 - [x] `parse_search_xml(xml)` — XML → `PaperRow` (네임스페이스에 유연, 오프라인 테스트됨)
 - [x] `search_csl(query)` — CSL-JSON 항목으로 변환 (country='KR' 태깅)
 - [x] `lr-export` 통합 — `KCI_API_KEY`가 있으면 KR 인용 풀에 자동 병합(`--no-kci`로 생략)
-- [ ] CLI(`lr-chat`)에 `search_kci` 도구 노출 (Claude가 직접 호출) — 추후
-- [ ] (선택) 로컬 프록시(`scripts/kci_proxy.py`)로 웹 UI 통합 — 추후
+- [x] CLI(`lr-chat`)에 `search_kci` 도구 노출 — Claude가 직접 호출해 KR 결과 보강
+- [x] 로컬 프록시(`scripts/kci_proxy.py` / `lr-kci-proxy`)로 웹 UI 통합 — `/kci` 엔드포인트 +
+  정적 파일 동시 제공으로 CORS 우회, `web/index.html`의 'KCI 실시간' 토글이 호출
+
+### 웹 프록시 사용
+
+```bash
+KCI_API_KEY=<키> lr-kci-proxy            # 기본 http://127.0.0.1:8765
+# 또는: python scripts/kci_proxy.py --port 8765 --web-dir web
+```
+
+브라우저로 위 주소에 접속해야 같은 출처에서 `/kci`를 호출할 수 있다(파일 더블클릭 ✗).
 
 > **참고**: 실제 KCI 응답 XML 스키마는 승인된 API 버전에 따라 태그명이 다를 수 있다.
 > 키 발급 후 실제 응답으로 `tests/test_kci.py`의 `SAMPLE_XML`을 교체해 파서를 보정하면 된다.
