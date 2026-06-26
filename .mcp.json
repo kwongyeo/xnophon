@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "korean-stat": {
+      "command": "uvx",
+      "args": ["--python", "3.12", "korean-stat-mcp"],
+      "env": {
+        "KOSIS_API_KEY": "${KOSIS_API_KEY}"
+      }
+    }
+  }
+}

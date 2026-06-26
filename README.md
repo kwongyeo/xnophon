@@ -86,6 +86,7 @@ start web\\index.html          # Windows
 | Semantic Scholar | 딥링크 | CP의 원본 데이터 소스 |
 | Google Scholar | 딥링크 | 보조 검색 |
 | KCI | 딥링크 | 한국어 논문 핵심 DB. **Open API 통합은 [docs/kci-api-setup.md](docs/kci-api-setup.md) 참조** |
+| KOSIS | MCP 서버 | 국가통계포털 통계 데이터. `korean-stat-mcp`를 `.mcp.json`에 등록. **설정은 [docs/kosis-mcp-setup.md](docs/kosis-mcp-setup.md) 참조** |
 
 ## 라이선스
 
