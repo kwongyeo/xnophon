@@ -12,10 +12,12 @@ OpenAlex API + Connected Papers + KCI를 통합해 한국과 미국 학술논문
 4. **논문 작성 연계** (`lr-export`) — 검색 결과를 표준 인용 포맷(CSL-JSON/BibTeX)과
    작성 브리프로 내보내, [opendraft](https://github.com/federicodeponte/opendraft)
    등 논문 작성 도구의 인용 풀로 바로 사용.
-5. **초안 생성** (`lr-draft`) — 인용 풀에서 Claude(Opus)로 한국어 논문 초안을
-   바로 생성. 풀에 있는 문헌만 인용(환각 인용 차단). 외부 도구 없이 자체 완결.
-6. **문서 변환** (`lr-build`) — 초안 + BibTeX를 Pandoc으로 PDF/DOCX/LaTeX 변환.
-7. **통합 실행** (`lr-run`) — 위 3~6을 한 명령으로 묶은 오케스트레이터.
+5. **맞춤 목차** (`lr-outline`) — 주제 + 인용 풀로 Claude가 주제 특화 목차(절·소절)를
+   설계 → `outline.md`/`outline.json`. 사람이 검토·수정 후 본문 작성에 사용.
+6. **초안 생성** (`lr-draft`) — 인용 풀과 목차로 Claude(Opus)가 한국어 논문 초안을
+   생성. 풀에 있는 문헌만 인용(환각 인용 차단). 외부 도구 없이 자체 완결.
+7. **문서 변환** (`lr-build`) — 초안 + BibTeX를 Pandoc으로 PDF/DOCX/LaTeX 변환.
+8. **통합 실행** (`lr-run`) — 위 3~7을 한 명령으로 묶은 오케스트레이터.
 
 ## 디렉터리 구조
 
@@ -42,11 +44,13 @@ literature-review/
 │   └── writing/                 논문 작성 계층
 │       ├── citations.py         CSL-JSON / BibTeX 변환기
 │       ├── export.py            인용 풀·브리프 내보내기 (lr-export)
+│       ├── outline.py           맞춤 목차 생성 (lr-outline)
 │       ├── draft.py             Claude 초안 생성 (lr-draft)
 │       └── build.py             Pandoc 문서 변환 (lr-build)
 │
 ├── assets/
 │   └── prompts/
+│       ├── outline_ko.md        목차 설계 시스템 프롬프트 (코드와 분리)
 │       └── draft_ko.md          초안 작성 시스템 프롬프트 (코드와 분리)
 │
 ├── scripts/
@@ -60,6 +64,7 @@ literature-review/
     ├── <주제-slug>/             주제별 작업 폴더 (덮어쓰기 방지)
     │   ├── kr_papers.json · us_papers.json · literature_review.md
     │   ├── citations.csl.json · citations.bib · paper_brief.md
+    │   ├── outline.md · outline.json
     │   └── draft.md · draft.pdf
     └── .cache/                  (선택) API 응답 캐시
 ```
@@ -72,18 +77,19 @@ python3 -m venv .venv
 ```
 
 `-e .`는 개발 모드 설치로, 소스 수정이 즉시 반영된다. 끝나면 다음 명령들이 PATH에 노출된다:
-`lr-run`, `lr-chat`, `lr-compare`, `lr-export`, `lr-draft`, `lr-build`, `lr-kci-proxy`.
+`lr-run`, `lr-chat`, `lr-compare`, `lr-export`, `lr-outline`, `lr-draft`, `lr-build`, `lr-kci-proxy`.
 
 API 키를 사용하려면 `.env.example`을 `.env`로 복사하고 값을 채운다.
 
 ## 빠른 시작 — 한 명령으로 (lr-run)
 
-검색부터 초안(선택적으로 PDF)까지 한 번에 실행한다. 결과는 주제별 폴더에 모인다.
+검색 → 맞춤 목차 → 초안(선택적으로 PDF)까지 한 번에 실행한다. 결과는 주제별 폴더에 모인다.
 
 ```bash
 .venv/bin/lr-run "large language model education" --per-country 30 --format pdf
 # → results/large-language-model-education/ 에 다음 생성:
-#   kr/us_papers.json · citations.csl.json · citations.bib · paper_brief.md · draft.md · draft.pdf
+#   kr/us_papers.json · citations.csl.json · citations.bib · paper_brief.md
+#   outline.md · outline.json · draft.md · draft.pdf
 ```
 
 - `ANTHROPIC_API_KEY` 있으면 Claude로 본문 초안, 없으면 골격 초안(`--skeleton`으로 강제).
@@ -158,22 +164,36 @@ KCI_API_KEY=<키> .venv/bin/lr-kci-proxy      # http://127.0.0.1:8765 에서 web
 - `citations.bib` — BibTeX (LaTeX 작성용)
 - `paper_brief.md` — 주제·검증된 출처 목록·작성 지시가 담긴 핸드오프 문서
 
-### 5) 초안 생성 (Claude)
+### 5) 맞춤 목차 생성 (Claude)
 
-인용 풀에서 곧바로 한국어 논문 초안을 생성한다. 외부 도구 없이 자체 완결.
+주제와 인용 풀에 맞춰 **주제 특화 목차(절·소절)** 를 설계한다. 고정 4섹션 대신
+"2.1 자동 피드백 / 2.2 표절 우려" 같은 주제별 구조를 제안한다.
 
 ```bash
 .venv/bin/lr-export "large language model education" --per-country 30
+.venv/bin/lr-outline --topic "LLM을 활용한 교육"     # ANTHROPIC_API_KEY 필요
+.venv/bin/lr-outline --topic "LLM을 활용한 교육" --skeleton   # 키 없이 기본 목차
+```
+
+생성물(인용 풀과 같은 폴더): `outline.md`(검토용) · `outline.json`(기계용).
+**사람이 `outline.md`를 먼저 검토·수정**한 뒤 다음 단계로 넘기면 품질이 올라간다.
+
+### 6) 초안 생성 (Claude)
+
+인용 풀과 목차로 한국어 논문 초안을 생성한다. 외부 도구 없이 자체 완결.
+
+```bash
 .venv/bin/lr-draft --topic "LLM을 활용한 교육"      # ANTHROPIC_API_KEY 필요
 
-# API 키 없이 골격 초안만(섹션 틀 + References, 오프라인)
+# API 키 없이 골격 초안만(목차 틀 + References, 오프라인)
 .venv/bin/lr-draft --topic "LLM을 활용한 교육" --skeleton
 ```
 
-생성물: `results/draft.md` — 서론 → 선행연구(KR/US 대비) → 본론 → 결론 구조.
+같은 폴더에 `outline.json`이 있으면 **그 목차를 그대로 따라** 작성한다(`--outline`으로
+다른 목차 지정 가능). 없으면 기본 4섹션. 생성물: `results/<주제>/draft.md`.
 **인용 풀에 있는 문헌만** `[key]` 형식으로 인용하도록 강제해 환각 인용을 막는다.
 
-### 6) 문서 변환 (Pandoc)
+### 7) 문서 변환 (Pandoc)
 
 초안과 BibTeX를 합쳐 인용·참고문헌이 들어간 최종 문서를 만든다.
 
@@ -191,14 +211,14 @@ KCI_API_KEY=<키> .venv/bin/lr-kci-proxy      # http://127.0.0.1:8765 에서 web
 `literature-review`(검색·비교)에서 최종 문서까지 이어지는 흐름:
 
 ```
-            ┌──────────────────── lr-run (통합 1명령) ────────────────────┐
-lr-compare / lr-chat  →  lr-export  →  lr-draft  →  lr-build
- (검색·비교)            (인용 풀·브리프)  (Claude 초안)  (PDF/DOCX/LaTeX)
-   + KCI 한국어 보강                  └ 또는 → opendraft 등 외부 도구
+        ┌──────────────────────── lr-run (통합 1명령) ────────────────────────┐
+lr-compare/lr-chat → lr-export → lr-outline → lr-draft → lr-build
+ (검색·비교)         (인용 풀)     (맞춤 목차)   (Claude 초안) (PDF/DOCX/LaTeX)
+   + KCI 한국어 보강                          └ 또는 → opendraft 등 외부 도구
 ```
 
 모든 산출물은 `results/<주제-slug>/` 한 폴더에 모여, 여러 주제를 돌려도 덮어쓰지 않는다.
-초안 작성 규칙은 `assets/prompts/draft_ko.md`에 분리돼 있어 코드 수정 없이 바꿀 수 있다.
+목차·초안 작성 규칙은 `assets/prompts/{outline,draft}_ko.md`에 분리돼 있어 코드 수정 없이 바꿀 수 있다.
 
 `lr-export`가 만드는 인용 풀은 표준 포맷이라 `lr-draft`(Claude) 외에 opendraft,
 Pandoc(`--bibliography citations.bib`), Zotero(CSL-JSON 가져오기)에도 그대로 쓸 수

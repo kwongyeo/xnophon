@@ -87,32 +87,71 @@ def reference_lines(items: list[dict[str, Any]]) -> list[str]:
     return lines
 
 
-def build_messages(topic: str, items: list[dict[str, Any]]) -> tuple[str, str]:
-    """(system, user) 프롬프트를 구성한다. 인용 위조 금지 제약을 명시."""
+def _outline_sections(outline: dict[str, Any] | None) -> list[dict[str, Any]]:
+    """목차 dict에서 (heading, subsections) 목록을 얻는다. 없으면 기본 4섹션."""
+    if outline and outline.get("sections"):
+        return outline["sections"]
+    return [{"heading": h, "subsections": []} for h in SECTIONS]
+
+
+def _render_outline(outline: dict[str, Any]) -> str:
+    """프롬프트에 넣을 번호 매김 목차 텍스트."""
+    lines = []
+    for i, sec in enumerate(outline.get("sections", []), 1):
+        lines.append(f"{i}. {sec.get('heading', '')}")
+        for j, sub in enumerate(sec.get("subsections", []), 1):
+            lines.append(f"   {i}.{j} {sub}")
+    return "\n".join(lines)
+
+
+def build_messages(
+    topic: str, items: list[dict[str, Any]], outline: dict[str, Any] | None = None
+) -> tuple[str, str]:
+    """(system, user) 프롬프트를 구성한다. 인용 위조 금지 제약을 명시.
+
+    outline이 주어지면 그 절·소절 구조를 정확히 따르도록 지시한다.
+    """
     refs = "\n".join(reference_lines(items))
     system = load_system_prompt()
+    outline_block = ""
+    if outline and outline.get("sections"):
+        outline_block = (
+            "\n# 따라야 할 목차 (이 절·소절 구조를 정확히 따르라)\n"
+            f"{_render_outline(outline)}\n"
+        )
     user = (
         f"# 주제\n{topic}\n\n"
-        f"# 인용 풀 (이 목록의 [key]만 사용 가능)\n{refs}\n\n"
+        f"# 인용 풀 (이 목록의 [key]만 사용 가능)\n{refs}\n"
+        f"{outline_block}\n"
         f"위 인용 풀을 근거로 '{topic}'에 대한 논문 초안을 작성하라."
     )
     return system, user
 
 
-def skeleton_draft(topic: str, items: list[dict[str, Any]]) -> str:
-    """API 키 없이도 동작하는 결정적 골격 초안(섹션 틀 + References)."""
+def skeleton_draft(
+    topic: str, items: list[dict[str, Any]], outline: dict[str, Any] | None = None
+) -> str:
+    """API 키 없이도 동작하는 결정적 골격 초안(목차 틀 + References).
+
+    outline이 주어지면 그 절·소절을 헤딩으로 펼친다(없으면 기본 4섹션).
+    """
     refs = reference_lines(items)
     keys = " ".join(f"[{it.get('id','?')}]" for it in items)
-    out = [f"# {topic}", "", "> 자동 생성된 **골격 초안**입니다. `ANTHROPIC_API_KEY`를 설정하면",
+    title = (outline or {}).get("title") or topic
+    out = [f"# {title}", "", "> 자동 생성된 **골격 초안**입니다. `ANTHROPIC_API_KEY`를 설정하면",
            "> `lr-draft`가 Claude로 본문을 채운 완성 초안을 생성합니다.", ""]
-    for sec in SECTIONS:
-        out.append(f"## {sec}")
+    for sec in _outline_sections(outline):
+        heading = sec.get("heading", "")
+        out.append(f"## {heading}")
         out.append("")
-        if sec.startswith("선행연구"):
+        if heading.startswith("선행연구"):
             out.append("한국(KR)과 미국(US)의 선행연구를 대비해 서술한다. 인용 가능한 문헌: " + keys)
         else:
             out.append("(작성 예정) 관련 인용: " + keys)
         out.append("")
+        for sub in sec.get("subsections", []):
+            out.append(f"### {sub}")
+            out.append("")
     out.append("## References")
     out.append("")
     out.extend(f"- {line}" for line in refs)
@@ -120,11 +159,16 @@ def skeleton_draft(topic: str, items: list[dict[str, Any]]) -> str:
     return "\n".join(out)
 
 
-def generate_draft(topic: str, items: list[dict[str, Any]], model: str = DEFAULT_MODEL) -> str:
+def generate_draft(
+    topic: str,
+    items: list[dict[str, Any]],
+    model: str = DEFAULT_MODEL,
+    outline: dict[str, Any] | None = None,
+) -> str:
     """Claude로 완성 초안을 생성한다(ANTHROPIC_API_KEY 필요)."""
     import anthropic
 
-    system, user = build_messages(topic, items)
+    system, user = build_messages(topic, items, outline)
     client = anthropic.Anthropic()
     resp = client.messages.create(
         model=model,
@@ -159,23 +203,38 @@ def main():
     parser.add_argument("--out", default="results/draft.md", help="출력 초안 경로.")
     parser.add_argument("--model", default=DEFAULT_MODEL)
     parser.add_argument(
+        "--outline",
+        default=None,
+        help="따라갈 목차 JSON 경로(기본: 인용 풀과 같은 폴더의 outline.json 자동 사용).",
+    )
+    parser.add_argument(
         "--skeleton",
         action="store_true",
         help="API 키가 있어도 골격 초안만 생성(LLM 호출 생략).",
     )
     args = parser.parse_args()
 
-    items = load_pool(Path(args.from_pool))
+    pool_path = Path(args.from_pool)
+    items = load_pool(pool_path)
     _ensure_ids(items)
     topic = args.topic or "(주제 미지정)"
+
+    # 목차: --outline 우선, 없으면 인용 풀과 같은 폴더의 outline.json 자동 사용.
+    from literature_review.writing import outline as outline_mod
+
+    outline_path = Path(args.outline) if args.outline else pool_path.parent / "outline.json"
+    outline = None
+    if outline_path.exists():
+        outline = outline_mod.load_outline(outline_path)
+        print(f"목차 사용: {outline_path} ({len(outline['sections'])}개 절)")
 
     if args.skeleton or not os.environ.get("ANTHROPIC_API_KEY"):
         if not args.skeleton:
             print("ANTHROPIC_API_KEY 미설정 — 골격 초안을 생성합니다.")
-        draft = skeleton_draft(topic, items)
+        draft = skeleton_draft(topic, items, outline)
     else:
         print(f"Claude({args.model})로 초안 생성 중… (인용 {len(items)}편)")
-        draft = generate_draft(topic, items, model=args.model)
+        draft = generate_draft(topic, items, model=args.model, outline=outline)
 
     out_path = Path(args.out)
     out_path.parent.mkdir(parents=True, exist_ok=True)

@@ -27,9 +27,15 @@ def test_write_outputs_skeleton_path(tmp_path):
     assert result["citations"].exists()
     assert result["bibliography"].exists()
     assert result["brief"].exists()
+    assert result["outline"].exists()
+    assert (out / "outline.json").exists()
     assert result["draft"].exists()
     assert result["built"] == []
     assert result["count"] == 1
+    assert result["sections"] >= 4
+
+    # 목차 파일에 기본 절이 들어 있어야 한다.
+    assert "## 목차" in result["outline"].read_text()
 
     # 골격 초안에 섹션과 인용 키가 들어 있어야 한다.
     draft_md = result["draft"].read_text()

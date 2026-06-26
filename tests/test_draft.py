@@ -55,3 +55,34 @@ def test_skeleton_draft_has_all_sections_and_refs():
         assert f"## {sec}" in md
     assert "## References" in md
     assert "[kim2023large]" in md
+
+
+_OUTLINE = {
+    "title": "맞춤 제목",
+    "sections": [
+        {"heading": "서론", "subsections": []},
+        {"heading": "선행연구", "subsections": ["한국(KR) 동향", "미국(US) 동향"]},
+        {"heading": "AI 글쓰기 효과", "subsections": ["자동 피드백"]},
+        {"heading": "결론", "subsections": []},
+    ],
+}
+
+
+def test_skeleton_draft_follows_outline():
+    items = _pool()
+    draft._ensure_ids(items)
+    md = draft.skeleton_draft("주제", items, outline=_OUTLINE)
+    # 제목·맞춤 절·소절이 반영돼야 한다.
+    assert "# 맞춤 제목" in md
+    assert "## AI 글쓰기 효과" in md
+    assert "### 자동 피드백" in md
+    assert "### 한국(KR) 동향" in md
+
+
+def test_build_messages_embeds_outline_instruction():
+    items = _pool()
+    draft._ensure_ids(items)
+    _, user = draft.build_messages("주제", items, outline=_OUTLINE)
+    assert "따라야 할 목차" in user
+    assert "AI 글쓰기 효과" in user
+    assert "2.1 한국(KR) 동향" in user

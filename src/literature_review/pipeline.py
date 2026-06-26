@@ -23,7 +23,7 @@ from pathlib import Path
 from typing import Any
 
 from literature_review import config
-from literature_review.writing import build, draft, export
+from literature_review.writing import build, draft, export, outline as outline_mod
 
 
 def write_outputs(
@@ -44,13 +44,23 @@ def write_outputs(
 
     # 2) 내보내기 (citations.csl.json/.bib + paper_brief.md). id 키도 여기서 채워진다.
     paths = export.write_pool(topic, items, out_dir)
-
-    # 3) 초안
     draft._ensure_ids(items)
+
+    # 2.5) 맞춤 목차 (Claude로 설계, 실패/키없음 시 기본 목차). outline.md/json 저장.
     if use_llm and config.anthropic_key():
-        draft_md = draft.generate_draft(topic, items, model=model)
+        try:
+            outline = outline_mod.generate_outline(topic, items, model=model)
+        except Exception:  # noqa: BLE001 (목차 실패 시 기본 목차로 진행)
+            outline = outline_mod.skeleton_outline(topic)
     else:
-        draft_md = draft.skeleton_draft(topic, items)
+        outline = outline_mod.skeleton_outline(topic)
+    outline_paths = outline_mod.write_outline(outline, out_dir)
+
+    # 3) 초안 — 위 목차를 따라 작성.
+    if use_llm and config.anthropic_key():
+        draft_md = draft.generate_draft(topic, items, model=model, outline=outline)
+    else:
+        draft_md = draft.skeleton_draft(topic, items, outline=outline)
     draft_path = out_dir / "draft.md"
     draft_path.write_text(draft_md)
 
@@ -68,10 +78,12 @@ def write_outputs(
         "citations": paths["csl"],
         "bibliography": paths["bib"],
         "brief": paths["brief"],
+        "outline": outline_paths["md"],
         "draft": draft_path,
         "built": built,
         "skipped_build": skipped_build,
         "count": len(items),
+        "sections": len(outline["sections"]),
     }
 
 
@@ -107,10 +119,12 @@ def run(
             print(f"      KCI 병합 건너뜀: {e}")
 
     items = export.merge_pool(*groups)
-    print(f"[2/4] 인용 풀 {len(items)}편 → 내보내기")
-    print(f"[3/4] 초안 생성 ({'Claude ' + model if use_llm and config.anthropic_key() else '골격'})")
+    print(f"[2/5] 인용 풀 {len(items)}편 → 내보내기")
+    llm = use_llm and config.anthropic_key()
+    print(f"[3/5] 맞춤 목차 설계 ({'Claude ' + model if llm else '기본 목차'})")
+    print(f"[4/5] 초안 생성 ({'Claude ' + model if llm else '골격'})")
     if formats:
-        print(f"[4/4] 문서 변환: {', '.join(formats)}")
+        print(f"[5/5] 문서 변환: {', '.join(formats)}")
 
     result = write_outputs(
         topic, items, out, use_llm=use_llm, model=model, formats=formats
@@ -150,10 +164,11 @@ def main():
         out_dir=Path(args.out_dir) if args.out_dir else None,
     )
 
-    print(f"\n완료: {result['out_dir']}/ (인용 {result['count']}편)")
+    print(f"\n완료: {result['out_dir']}/ (인용 {result['count']}편, 목차 {result['sections']}개 절)")
     print(f"  - {result['citations']}")
     print(f"  - {result['bibliography']}")
     print(f"  - {result['brief']}")
+    print(f"  - {result['outline']}")
     print(f"  - {result['draft']}")
     for p in result["built"]:
         print(f"  - {p}")
