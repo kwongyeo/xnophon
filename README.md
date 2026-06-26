@@ -9,6 +9,8 @@ OpenAlex API + Connected Papers + KCI 딥링크를 통합해 한국과 미국 �
 4. **논문 작성 연계** (`lr-export`) — 검색 결과를 표준 인용 포맷(CSL-JSON/BibTeX)과
    작성 브리프로 내보내, [opendraft](https://github.com/federicodeponte/opendraft)
    등 논문 작성 도구의 인용 풀로 바로 사용.
+5. **초안 생성** (`lr-draft`) — 인용 풀에서 Claude(Opus)로 한국어 논문 초안을
+   바로 생성. 풀에 있는 문헌만 인용(환각 인용 차단). 외부 도구 없이 자체 완결.
 
 ## 디렉터리 구조
 
@@ -31,7 +33,8 @@ literature-review/
 │   │   └── (kci.py 추후)
 │   └── writing/                  논문 작성 도구 연계
 │       ├── citations.py          CSL-JSON / BibTeX 변환기
-│       └── export.py             인용 풀·브리프 내보내기 (lr-export)
+│       ├── export.py             인용 풀·브리프 내보내기 (lr-export)
+│       └── draft.py              Claude 초안 생성 (lr-draft)
 │
 ├── docs/
 │   └── kci-api-setup.md          KCI Open API 키 발급 가이드
@@ -102,19 +105,35 @@ start web\\index.html          # Windows
 - `citations.bib` — BibTeX (LaTeX 작성용)
 - `paper_brief.md` — 주제·검증된 출처 목록·작성 지시가 담긴 핸드오프 문서
 
+### 5) 초안 생성 (Claude)
+
+인용 풀에서 곧바로 한국어 논문 초안을 생성한다. 외부 도구 없이 자체 완결.
+
+```bash
+.venv/bin/lr-export "large language model education" --per-country 30
+.venv/bin/lr-draft --topic "LLM을 활용한 교육"      # ANTHROPIC_API_KEY 필요
+
+# API 키 없이 골격 초안만(섹션 틀 + References, 오프라인)
+.venv/bin/lr-draft --topic "LLM을 활용한 교육" --skeleton
+```
+
+생성물: `results/draft.md` — 서론 → 선행연구(KR/US 대비) → 본론 → 결론 구조.
+**인용 풀에 있는 문헌만** `[key]` 형식으로 인용하도록 강제해 환각 인용을 막는다.
+
 ## 논문 작성 자동화 파이프라인
 
 `literature-review`(검색·비교)에서 논문 초안까지 이어지는 흐름:
 
 ```
-lr-compare / lr-chat   →   lr-export   →   opendraft 등 작성 도구
-  (검색·비교)              (인용 풀·브리프)     (초안·인용검증·PDF/Word/LaTeX)
+lr-compare / lr-chat  →  lr-export  →  lr-draft (자체 완결)
+ (검색·비교)            (인용 풀·브리프)   └ 또는 → opendraft 등 외부 도구
+                                            (PDF/Word/LaTeX)
 ```
 
-`lr-export`가 만드는 인용 풀은 표준 포맷이라 opendraft 외에 Pandoc(`--bibliography
-citations.bib`)이나 Zotero(CSL-JSON 가져오기)에도 그대로 쓸 수 있다. `paper_brief.md`는
-"목록에 없는 문헌을 지어내지 말 것"(인용 위조 금지)을 명시해 LLM 작성 도구의
-환각 인용을 억제한다.
+`lr-export`가 만드는 인용 풀은 표준 포맷이라 `lr-draft`(Claude) 외에 opendraft,
+Pandoc(`--bibliography citations.bib`), Zotero(CSL-JSON 가져오기)에도 그대로 쓸 수
+있다. `lr-draft`와 `paper_brief.md` 모두 "목록에 없는 문헌을 지어내지 말 것"(인용
+위조 금지)을 명시해 LLM 작성 도구의 환각 인용을 억제한다.
 
 ## 통합된 데이터 소스
 
