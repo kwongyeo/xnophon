@@ -1,0 +1,42 @@
+# --- QGIS 작업 파일 ---
+*.qgs~                  # 프로젝트 백업
+*.qgz~
+*.qgd                   # 프로젝트 보조 DB
+.qgis2/
+
+# --- 대용량 GIS 데이터 (출처에서 다시 받을 수 있는 것은 추적 제외) ---
+# 벡터
+*.shp
+*.shx
+*.dbf
+*.prj
+*.cpg
+*.sbn
+*.sbx
+# GeoPackage / SpatiaLite (대용량인 경우가 많음)
+*.gpkg
+*.gpkg-shm
+*.gpkg-wal
+*.sqlite
+# 래스터
+*.tif
+*.tiff
+*.img
+*.vrt
+*.asc
+*.ovr            # 피라미드
+*.aux.xml
+# 압축 원본
+*.zip
+*.gz
+*.7z
+
+# --- 재생성 가능한 산출물 ---
+outputs/maps/*
+outputs/tables/*
+outputs/reports/*
+data/interim/*
+data/processed/*
+
+# --- 빈 폴더 구조는 유지 ---
+!.gitkeep
