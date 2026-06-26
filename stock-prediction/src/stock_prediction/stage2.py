@@ -57,8 +57,12 @@ def main() -> None:
     target = f"target_ret_{h}d"
     all_feats = FEATURE_COLUMNS + FUND_FEATURE_COLUMNS
 
-    # 공통 샘플: 두 피처셋 모두 결측 없는 행만 (apples-to-apples)
+    # 공통 샘플: 두 피처셋 모두 결측 없는 행만 (apples-to-apples).
+    # 횡단면 표준화를 여기서 한 번만 수행 → A·B가 100% 동일한 행/날짜를 쓰도록 보장
+    # (그렇지 않으면 각 run의 zscore 후 dropna가 다른 행을 떨궈 표본이 어긋난다).
+    from .baseline import cross_sectional_zscore
     common = panel.dropna(subset=all_feats + [target]).copy()
+    common = cross_sectional_zscore(common, all_feats).dropna(subset=all_feats)
     n_fund = snaps["ticker"].nunique()
     print(f"\n펀더멘털 종목: {n_fund} · 공통 샘플 {len(common):,}행 · "
           f"거래일 {common['date'].nunique()}일 · 종목 {common['ticker'].nunique()}")
@@ -66,8 +70,10 @@ def main() -> None:
     print(f"타깃: 미래 {h}일 수익률 · 상위 {cfg['backtest']['top_k']}종목 롱, "
           f"비용 {cfg['backtest']['cost_bps']}bp")
 
-    priceonly = run_models(common, cfg, h, feature_cols=FEATURE_COLUMNS, prefiltered=True)
-    combined = run_models(common, cfg, h, feature_cols=all_feats, prefiltered=True)
+    priceonly = run_models(common, cfg, h, feature_cols=FEATURE_COLUMNS,
+                           prefiltered=True, do_zscore=False)
+    combined = run_models(common, cfg, h, feature_cols=all_feats,
+                          prefiltered=True, do_zscore=False)
 
     bench = None
     for tag, out in [("A) 가격만", priceonly), ("B) 가격+펀더멘털", combined)]:

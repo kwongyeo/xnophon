@@ -82,16 +82,18 @@ def _fit_windows(cfg: dict, n_dates: int, horizon: int):
 
 def run_models(panel: pd.DataFrame, cfg: dict, horizon: int,
                feature_cols: list[str] | None = None,
-               prefiltered: bool = False) -> dict:
+               prefiltered: bool = False, do_zscore: bool = True) -> dict:
     """워크포워드 OOS 예측 + 백테스트.
 
     feature_cols: 사용할 피처 목록(기본 가격/기술적). mom_20 은 Momentum 기준선에 필요.
     prefiltered: True면 panel이 이미 결측 제거된 공통 샘플(단계 간 공정 비교용).
+    do_zscore: False면 이미 횡단면 표준화된 데이터로 간주(공정 비교 시 동일 행 보장).
     """
     target = f"target_ret_{horizon}d"
     feat = list(feature_cols or FEATURE_COLUMNS)
     data = panel.copy() if prefiltered else panel.dropna(subset=feat + [target]).copy()
-    data = cross_sectional_zscore(data, feat).dropna(subset=feat)
+    if do_zscore:
+        data = cross_sectional_zscore(data, feat).dropna(subset=feat)
 
     dates = np.sort(data["date"].unique())
     tr, te, st, emb = _fit_windows(cfg, len(dates), horizon)
