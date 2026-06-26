@@ -1,0 +1,23 @@
+# 일괄 설치할 QGIS 플러그인 목록 (한 줄에 하나, # 은 주석)
+# 이름은 QGIS 공식 저장소(plugins.qgis.org)의 플러그인 '이름'과 정확히 일치해야 한다.
+# install_plugins.sh 가 이 파일을 읽어 순서대로 설치한다.
+
+# --- 범용 · 필수 ---
+QuickOSM
+QuickMapServices
+DataPlotly
+mmqgis
+
+# --- 공간통계 · 핫스팟 ---
+Hotspot Analysis Plugin
+Spatial Analysis Toolbox
+
+# --- 네트워크 · 접근성 ---
+QNEAT3
+
+# --- 원격탐사 · 래스터 ---
+Semi-Automatic Classification Plugin
+
+# --- 웹 · 3D 내보내기 ---
+qgis2web
+Qgis2threejs
