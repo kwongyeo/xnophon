@@ -42,5 +42,8 @@ data/processed/*
 symbology-style.db
 *.qgz.~lock~
 
+# --- 자동 다운로드되는 경계 데이터 (make_population_map.py 가 재취득) ---
+data/external/skorea-provinces-2018-geo.json
+
 # --- 빈 폴더 구조는 유지 ---
 !.gitkeep
