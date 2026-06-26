@@ -82,12 +82,14 @@ def _fit_windows(cfg: dict, n_dates: int, horizon: int):
 
 def run_models(panel: pd.DataFrame, cfg: dict, horizon: int,
                feature_cols: list[str] | None = None,
-               prefiltered: bool = False, do_zscore: bool = True) -> dict:
+               prefiltered: bool = False, do_zscore: bool = True,
+               mode: str = "long") -> dict:
     """워크포워드 OOS 예측 + 백테스트.
 
     feature_cols: 사용할 피처 목록(기본 가격/기술적). mom_20 은 Momentum 기준선에 필요.
     prefiltered: True면 panel이 이미 결측 제거된 공통 샘플(단계 간 공정 비교용).
     do_zscore: False면 이미 횡단면 표준화된 데이터로 간주(공정 비교 시 동일 행 보장).
+    mode: "long"(상위 K 매수) | "long_short"(상위 매수 + 하위 매도, 시장중립).
     """
     target = f"target_ret_{horizon}d"
     feat = list(feature_cols or FEATURE_COLUMNS)
@@ -133,6 +135,7 @@ def run_models(panel: pd.DataFrame, cfg: dict, horizon: int,
         results[name] = engine.run_backtest(
             pred_df, horizon=horizon,
             top_k=cfg["backtest"]["top_k"], cost_bps=cfg["backtest"]["cost_bps"],
+            mode=mode,
         )
     return {"results": results, "n_dates": len(dates), "n_folds": len(folds),
             "windows": (tr, te, st, emb), "n_tickers": data["ticker"].nunique()}

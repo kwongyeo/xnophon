@@ -6,8 +6,11 @@
       fwd_ret : 해당 시점의 실현 미래 h일 수익률(타깃)
 
 겹침(overlap) 없는 평가를 위해 h 거래일마다 리밸런싱한다(논오버랩).
-각 리밸런싱일: pred 상위 top_k 동일가중 → 평균 fwd_ret - 왕복비용.
-벤치마크: 같은 날 전체 종목 동일가중(equal-weight) 수익률.
+
+모드:
+- long(기본): pred 상위 top_k 동일가중 매수 → 평균 fwd_ret - 왕복비용. 벤치마크=동일가중.
+- long_short: 상위 top_k 매수 + 하위 top_k 매도(시장중립). 수익=상단평균-하단평균,
+  비용은 양쪽 다리에 부과(2×). 시장베타가 제거되므로 **0 대비**로 평가해야 한다.
 """
 from __future__ import annotations
 
@@ -18,7 +21,7 @@ from ..evaluation import metrics
 
 
 def run_backtest(pred_df: pd.DataFrame, horizon: int, top_k: int,
-                 cost_bps: float = 25.0) -> dict:
+                 cost_bps: float = 25.0, mode: str = "long") -> dict:
     df = pred_df.dropna(subset=["pred", "fwd_ret"]).copy()
     df["date"] = pd.to_datetime(df["date"])
     dates = np.sort(df["date"].unique())
@@ -26,14 +29,20 @@ def run_backtest(pred_df: pd.DataFrame, horizon: int, top_k: int,
     # h 거래일 간격으로 논오버랩 리밸런싱일 선택
     rebal_dates = dates[::horizon]
     cost = cost_bps / 1e4  # 왕복 거래비용 (비율)
+    need = max(2 * top_k, 2) if mode == "long_short" else max(top_k, 2)
 
     rows = []
     for d in rebal_dates:
         day = df[df["date"] == d]
-        if len(day) < max(top_k, 2):
+        if len(day) < need:
             continue
-        picks = day.nlargest(top_k, "pred")
-        strat_ret = picks["fwd_ret"].mean() - cost
+        longs = day.nlargest(top_k, "pred")
+        if mode == "long_short":
+            shorts = day.nsmallest(top_k, "pred")
+            # 양다리 시장중립: 비용은 매수·매도 양쪽에 부과
+            strat_ret = longs["fwd_ret"].mean() - shorts["fwd_ret"].mean() - 2 * cost
+        else:
+            strat_ret = longs["fwd_ret"].mean() - cost
         bench_ret = day["fwd_ret"].mean()
         rows.append({"date": d, "strat_ret": strat_ret, "bench_ret": bench_ret,
                      "n": len(day)})
