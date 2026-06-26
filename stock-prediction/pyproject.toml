@@ -29,6 +29,7 @@ deep = ["torch>=2.1"]       # LSTM/Transformer 사용 시
 
 [project.scripts]
 sp-pipeline = "stock_prediction.pipeline:main"
+sp-poc = "stock_prediction.poc:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
