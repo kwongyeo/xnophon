@@ -37,6 +37,7 @@ def load_fundamentals(dirpath: str | Path) -> pd.DataFrame:
                 "revenue": r.get("revenue"),
                 "op_income": r.get("op_income"),
                 "net_income": r.get("net_income"),
+                "assets": r.get("assets"),
                 "equity": r.get("equity"),
                 "liabilities": r.get("liabilities"),
                 "shares": shares,
@@ -44,14 +45,17 @@ def load_fundamentals(dirpath: str | Path) -> pd.DataFrame:
     df = pd.DataFrame(rows).dropna(subset=["disclosed_at"])
     df = df.sort_values(["ticker", "fiscal_year"]).reset_index(drop=True)
 
-    num = ["revenue", "op_income", "net_income", "equity", "liabilities", "shares"]
+    num = ["revenue", "op_income", "net_income", "assets", "equity", "liabilities", "shares"]
     df[num] = df[num].apply(pd.to_numeric, errors="coerce")
 
     g = df.groupby("ticker")
     df["f_roe"] = df["net_income"] / df["equity"]
     df["f_op_margin"] = df["op_income"] / df["revenue"]
-    df["f_liab_to_equity"] = df["liabilities"] / df["equity"]
-    df["f_rev_growth"] = g["revenue"].pct_change()
+    # 부채총계가 없으면 자산-자본으로 보완(KR=부채총계, US=assets-equity 일관화)
+    df["f_liab_to_equity"] = df["liabilities"].fillna(df["assets"] - df["equity"]) / df["equity"] \
+        if "assets" in df.columns else df["liabilities"] / df["equity"]
+    # 종목별 첫 회계연도는 직전년이 없어 성장률 결측 → 중립값 0으로 임퓨트(표본 절단 방지)
+    df["f_rev_growth"] = g["revenue"].pct_change().fillna(0.0)
     # 주당 지표(가치 팩터는 가격과 결합 시 계산) — 주식수 없으면 NaN
     df["bps"] = df["equity"] / df["shares"]
     df["eps"] = df["net_income"] / df["shares"]
