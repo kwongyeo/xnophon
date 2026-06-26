@@ -6,6 +6,48 @@
       "env": {
         "KOSIS_API_KEY": "${KOSIS_API_KEY}"
       }
+    },
+    "data-go-nps-business-enrollment": {
+      "command": "uvx",
+      "args": ["data-go-mcp.nps-business-enrollment@latest"],
+      "env": {
+        "API_KEY": "${DATA_GO_KR_API_KEY}"
+      }
+    },
+    "data-go-nts-business-verification": {
+      "command": "uvx",
+      "args": ["data-go-mcp.nts-business-verification@latest"],
+      "env": {
+        "API_KEY": "${DATA_GO_KR_API_KEY}"
+      }
+    },
+    "data-go-pps-narajangteo": {
+      "command": "uvx",
+      "args": ["data-go-mcp.pps-narajangteo@latest"],
+      "env": {
+        "API_KEY": "${DATA_GO_KR_API_KEY}"
+      }
+    },
+    "data-go-fsc-financial-info": {
+      "command": "uvx",
+      "args": ["data-go-mcp.fsc-financial-info@latest"],
+      "env": {
+        "API_KEY": "${DATA_GO_KR_API_KEY}"
+      }
+    },
+    "data-go-presidential-speeches": {
+      "command": "uvx",
+      "args": ["data-go-mcp.presidential-speeches@latest"],
+      "env": {
+        "API_KEY": "${DATA_GO_KR_API_KEY}"
+      }
+    },
+    "data-go-msds-chemical-info": {
+      "command": "uvx",
+      "args": ["data-go-mcp.msds-chemical-info@latest"],
+      "env": {
+        "API_KEY": "${DATA_GO_KR_API_KEY}"
+      }
     }
   }
 }
