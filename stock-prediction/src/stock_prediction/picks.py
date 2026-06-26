@@ -32,7 +32,7 @@ FUND = ROOT / "data" / "raw" / "fundamentals"
 FUND_Q = ROOT / "data" / "raw" / "fundamentals_q"
 SENT = ROOT / "data" / "raw" / "sentiment_kr"
 STOCK = FEATURE_COLUMNS + FUND_FEATURE_COLUMNS
-H = 40   # ≈ 2개월(거래일)
+H = 40   # ≈ 2개월(거래일). CLI 인자로 변경 가능: sp-picks 60
 TOPK = 5
 
 # 설명용 원시 팩터(시장 내 백분위로 표시)
@@ -49,14 +49,17 @@ def _names() -> dict:
 
 
 def main() -> None:
+    import sys
+    h = int(sys.argv[1]) if len(sys.argv) > 1 and sys.argv[1].isdigit() else H
+    months = round(h / 21)
     cfg = load_config()
     names = _names()
 
-    base = load_universe_panel(H)
+    base = load_universe_panel(h)
     base["market"] = base["ticker"].map(market_of)
     base = add_fundamental_features(base, load_fundamentals_combined(FUND, FUND_Q))
-    panel = add_target_per_ticker(base, H)
-    target = f"target_ret_{H}d"
+    panel = add_target_per_ticker(base, h)
+    target = f"target_ret_{h}d"
 
     # 원시 팩터 보존본(설명용) + 모델 입력용 시장중립 zscore본
     raw = panel.copy()
@@ -82,7 +85,7 @@ def main() -> None:
     pred_rows = pd.concat(parts, ignore_index=True)
 
     print("=" * 72)
-    print("주탐주예 모델 랭킹 — 최신 단면 기준 40거래일(≈2개월) 예측수익 상위")
+    print(f"주탐주예 모델 랭킹 — 최신 단면 기준 {h}거래일(≈{months}개월) 예측수익 상위")
     print("⚠️ 연구·교육용. 투자자문/수익보장 아님. 모델 스킬 약함(백테스트 RankIC≈0.05).")
     print("=" * 72)
 
