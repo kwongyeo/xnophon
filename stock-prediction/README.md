@@ -91,7 +91,8 @@ cp .env.example .env       # API 키 채우기 (DART, FRED, Naver는 무료)
 | ★ 표본확대 | ✅ 완료 | 한국+미국 50종목 재실행 / [결과](docs/stage-expanded-kr-us-results.md): 큰 표본에서도 단기 신호 미확인(견고) |
 | ★ 기간스윕 | ✅ 완료 | `sp-horizon` 5/20/60일 / [결과](docs/horizon-sweep-results.md): **펀더멘털 RankIC 기여가 기간과 함께↑, 60일서 0.13 — 첫 실질 신호** |
 | ★ 롱숏중립 | ✅ 완료 | `sp-longshort` / [결과](docs/longshort-results.md): **신호가 베타 아닌 진짜 알파 확인(롱숏 샤프 1.1~1.6), 단 표본 작음** |
-| 3. 레짐 | ⬜ 예정 | 거시지표 추가 |
+| 2b. 분기펀더 | ✅ 완료 | `sp-stage3` / [결과](docs/stage3-quarterly-macro-results.md): **분기 갱신이 LightGBM RankIC -0.01→0.03, 롱숏 샤프 -0.04→0.92로 개선** |
+| 3. 레짐 | ✅ 완료 | `sp-stage3` 레짐 분할 / **저VIX 샤프 2.77 vs 고VIX -0.55 — 강한 국면 의존성** |
 | 4. 심리 | ⬜ 예정 | 뉴스/검색 감성 추가 |
 
 > 단계1 핵심 결과: **가격/기술적 피처만으로는 횡단면 예측 신호가 사실상 없으며

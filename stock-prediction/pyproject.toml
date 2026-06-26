@@ -34,6 +34,7 @@ sp-baseline = "stock_prediction.baseline:main"
 sp-stage2 = "stock_prediction.stage2:main"
 sp-horizon = "stock_prediction.horizon_sweep:main"
 sp-longshort = "stock_prediction.longshort:main"
+sp-stage3 = "stock_prediction.stage3:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
