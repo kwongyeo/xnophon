@@ -77,6 +77,7 @@ cp .env.example .env       # API 키 채우기 (DART, FRED, Naver는 무료)
 
 .venv/bin/sp-poc           # 0단계 PoC (삼성·AAPL 시세+재무 수집→정규화→피처/타깃)
 .venv/bin/sp-baseline      # 1단계 베이스라인 (워크포워드 횡단면 예측+백테스트)
+.venv/bin/sp-stage2        # 2단계 (가격 vs 가격+펀더멘털 공정 비교)
 .venv/bin/sp-pipeline      # 전체 파이프라인 (수집→피처→학습→백테스트)
 ```
 
@@ -86,7 +87,7 @@ cp .env.example .env       # API 키 채우기 (DART, FRED, Naver는 무료)
 |---|---|---|
 | 0. PoC | ✅ 완료 | `sp-poc` — 삼성·AAPL 실데이터 수집·정규화·피처·타깃 |
 | 1. 베이스라인 | ✅ 완료 | `sp-baseline` — 가격피처만 / [결과](docs/stage1-baseline-results.md): IC≈0, 벤치마크 미달 |
-| 2. 펀더멘털 | ⬜ 예정 | DART/yfinance 재무(point-in-time) 추가 |
+| 2. 펀더멘털 | ✅ 완료 | `sp-stage2` — PIT 재무 추가 / [결과](docs/stage2-fundamental-results.md): 개선 비결정적(inconclusive), 표본 확대 필요 |
 | 3. 레짐 | ⬜ 예정 | 거시지표 추가 |
 | 4. 심리 | ⬜ 예정 | 뉴스/검색 감성 추가 |
 
