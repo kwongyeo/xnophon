@@ -1,0 +1,17 @@
+# 패널회귀 · 공간패널회귀 Python 스택 (이 컨테이너에서 설치·임포트 검증 완료)
+# 설치:  python3 -m venv .venv && .venv/bin/pip install -r econometrics/requirements.txt
+
+# --- 패널회귀 (정적: 고정효과·확률효과·1차차분·FamaMacBeth) ---
+linearmodels>=7.0
+
+# --- 동적 패널 GMM (Arellano-Bond / Blundell-Bond) ---
+pydynpd>=0.2.2
+
+# --- 공간 회귀·공간 패널회귀 (PySAL) ---
+spreg>=1.9.0          # Panel_FE_Lag/Error, Panel_RE_Lag/Error, ML_Lag, GM_Error 등
+libpysal>=4.14        # 공간가중치(Queen/Rook/KNN/거리), 예제 데이터
+esda>=2.5             # 공간자기상관 진단(Moran's I 등) — 모형 선택 보조
+spglm>=1.1            # spreg 의존 (일반화선형 공간모형)
+
+# --- 공간 데이터 입출력 (시도/시군구 경계 등) ---
+geopandas>=1.0
