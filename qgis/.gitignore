@@ -38,5 +38,9 @@ outputs/reports/*
 data/interim/*
 data/processed/*
 
+# --- QGIS 헤드리스 실행 런타임 부산물 ---
+symbology-style.db
+*.qgz.~lock~
+
 # --- 빈 폴더 구조는 유지 ---
 !.gitkeep
