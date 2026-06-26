@@ -21,6 +21,12 @@ dev = ["pytest>=8"]
 [project.scripts]
 lr-chat = "literature_review.cli:main"
 lr-compare = "literature_review.compare:main"
+lr-export = "literature_review.writing.export:main"
+lr-outline = "literature_review.writing.outline:main"
+lr-draft = "literature_review.writing.draft:main"
+lr-build = "literature_review.writing.build:main"
+lr-kci-proxy = "literature_review.web_proxy:main"
+lr-run = "literature_review.pipeline:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
