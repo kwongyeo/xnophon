@@ -59,15 +59,22 @@ def load_universe_panel(horizon: int) -> pd.DataFrame:
     return pd.concat(frames, ignore_index=True)
 
 
-def cross_sectional_zscore(df: pd.DataFrame, cols: list[str]) -> pd.DataFrame:
-    """날짜별 횡단면 표준화. 그 날의 단면만 사용 → 누수 없음."""
+def cross_sectional_zscore(df: pd.DataFrame, cols: list[str],
+                           by: list[str] | None = None) -> pd.DataFrame:
+    """횡단면 표준화. 기본은 날짜별; by 지정 시 (날짜+by)별 — 예: by=["market"]면
+    시장 내(market-neutral) 표준화. 그 단면만 사용 → 누수 없음."""
     df = df.copy()
-    g = df.groupby("date")
+    g = df.groupby(["date"] + (by or []))
     for c in cols:
         mean = g[c].transform("mean")
         std = g[c].transform("std")
         df[c] = (df[c] - mean) / std.replace(0, np.nan)
     return df
+
+
+def market_of(ticker: str) -> str:
+    """6자리 숫자 코드=KR(KRX), 그 외=US."""
+    return "KR" if str(ticker)[:6].isdigit() and len(str(ticker)) <= 6 else "US"
 
 
 def _fit_windows(cfg: dict, n_dates: int, horizon: int):
@@ -83,13 +90,14 @@ def _fit_windows(cfg: dict, n_dates: int, horizon: int):
 def run_models(panel: pd.DataFrame, cfg: dict, horizon: int,
                feature_cols: list[str] | None = None,
                prefiltered: bool = False, do_zscore: bool = True,
-               mode: str = "long") -> dict:
+               mode: str = "long", group_col: str | None = None) -> dict:
     """워크포워드 OOS 예측 + 백테스트.
 
     feature_cols: 사용할 피처 목록(기본 가격/기술적). mom_20 은 Momentum 기준선에 필요.
     prefiltered: True면 panel이 이미 결측 제거된 공통 샘플(단계 간 공정 비교용).
     do_zscore: False면 이미 횡단면 표준화된 데이터로 간주(공정 비교 시 동일 행 보장).
     mode: "long"(상위 K 매수) | "long_short"(상위 매수 + 하위 매도, 시장중립).
+    group_col: 지정 시 백테스트에서 그룹(예: market)별로 동수 롱숏(시장중립화).
     """
     target = f"target_ret_{horizon}d"
     feat = list(feature_cols or FEATURE_COLUMNS)
@@ -117,7 +125,8 @@ def run_models(panel: pd.DataFrame, cfg: dict, horizon: int,
     for fold in folds:
         tr_mask, te_mask = assign_fold_masks(data, fold)
         Xtr, ytr = data.loc[tr_mask, feat].to_numpy(), data.loc[tr_mask, target].to_numpy()
-        test = data.loc[te_mask, ["date", "ticker", target]].copy()
+        test_cols = ["date", "ticker", target] + ([group_col] if group_col else [])
+        test = data.loc[te_mask, test_cols].copy()
         Xte = data.loc[te_mask, feat].to_numpy()
         if len(Xtr) < 30 or len(Xte) == 0:
             continue
@@ -135,7 +144,7 @@ def run_models(panel: pd.DataFrame, cfg: dict, horizon: int,
         results[name] = engine.run_backtest(
             pred_df, horizon=horizon,
             top_k=cfg["backtest"]["top_k"], cost_bps=cfg["backtest"]["cost_bps"],
-            mode=mode,
+            mode=mode, group_col=group_col,
         )
     return {"results": results, "n_dates": len(dates), "n_folds": len(folds),
             "windows": (tr, te, st, emb), "n_tickers": data["ticker"].nunique()}

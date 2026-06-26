@@ -20,8 +20,27 @@ import pandas as pd
 from ..evaluation import metrics
 
 
+def _picks(day: pd.DataFrame, top_k: int, mode: str, group_col: str | None):
+    """리밸런싱일의 롱/숏 종목 선택. group_col 지정 시 그룹(시장)별로 동수 선택."""
+    if group_col and group_col in day.columns:
+        longs, shorts = [], []
+        for _, g in day.groupby(group_col):
+            if len(g) < (2 * top_k if mode == "long_short" else top_k):
+                continue
+            longs.append(g.nlargest(top_k, "pred"))
+            if mode == "long_short":
+                shorts.append(g.nsmallest(top_k, "pred"))
+        longs = pd.concat(longs) if longs else day.iloc[0:0]
+        shorts = pd.concat(shorts) if shorts else day.iloc[0:0]
+        return longs, shorts
+    longs = day.nlargest(top_k, "pred")
+    shorts = day.nsmallest(top_k, "pred") if mode == "long_short" else day.iloc[0:0]
+    return longs, shorts
+
+
 def run_backtest(pred_df: pd.DataFrame, horizon: int, top_k: int,
-                 cost_bps: float = 25.0, mode: str = "long") -> dict:
+                 cost_bps: float = 25.0, mode: str = "long",
+                 group_col: str | None = None) -> dict:
     df = pred_df.dropna(subset=["pred", "fwd_ret"]).copy()
     df["date"] = pd.to_datetime(df["date"])
     dates = np.sort(df["date"].unique())
@@ -36,9 +55,12 @@ def run_backtest(pred_df: pd.DataFrame, horizon: int, top_k: int,
         day = df[df["date"] == d]
         if len(day) < need:
             continue
-        longs = day.nlargest(top_k, "pred")
+        longs, shorts = _picks(day, top_k, mode, group_col)
+        if len(longs) == 0:
+            continue
         if mode == "long_short":
-            shorts = day.nsmallest(top_k, "pred")
+            if len(shorts) == 0:
+                continue
             # 양다리 시장중립: 비용은 매수·매도 양쪽에 부과
             strat_ret = longs["fwd_ret"].mean() - shorts["fwd_ret"].mean() - 2 * cost
         else:

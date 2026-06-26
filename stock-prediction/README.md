@@ -94,6 +94,7 @@ cp .env.example .env       # API 키 채우기 (DART, FRED, Naver는 무료)
 | 2b. 분기펀더 | ✅ 완료 | `sp-stage3` / [결과](docs/stage3-quarterly-macro-results.md): **분기 갱신이 LightGBM RankIC -0.01→0.03, 롱숏 샤프 -0.04→0.92로 개선** |
 | 3. 레짐 | ✅ 완료 | `sp-stage3` 레짐 분할 / **저VIX 샤프 2.77 vs 고VIX -0.55 — 강한 국면 의존성** |
 | ★ 레짐필터 | ✅ 완료 | `sp-regime` / [결과](docs/regime-strategy-results.md): **트레일링 VIX 필터로 샤프 0.92→1.47, MDD 반토막 (표본 작음)** |
+| ★ 시장중립 | ✅ 완료 | `sp-neutral` / [결과](docs/market-neutral-results.md): **시장 내 정규화로 샤프↑, MDD -33%→-11% — 신호가 시장 내부서도 유효** |
 | 4. 심리 | ⬜ 예정 | 뉴스/검색 감성 추가 |
 
 > 단계1 핵심 결과: **가격/기술적 피처만으로는 횡단면 예측 신호가 사실상 없으며

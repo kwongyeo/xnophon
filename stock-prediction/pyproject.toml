@@ -36,6 +36,7 @@ sp-horizon = "stock_prediction.horizon_sweep:main"
 sp-longshort = "stock_prediction.longshort:main"
 sp-stage3 = "stock_prediction.stage3:main"
 sp-regime = "stock_prediction.regime_strategy:main"
+sp-neutral = "stock_prediction.neutral:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
