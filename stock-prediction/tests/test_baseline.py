@@ -42,3 +42,20 @@ def test_backtest_perfect_foresight_beats_benchmark():
     res = engine.run_backtest(df, horizon=5, top_k=3, cost_bps=0)
     assert res["ic"] > 0.99
     assert res["strategy"]["total_return"] > res["benchmark"]["total_return"]
+
+
+def test_add_target_per_ticker_no_boundary_leak():
+    import pandas as pd
+    from stock_prediction.horizon_sweep import add_target_per_ticker
+    # 두 종목, 가격이 명확히 다름 → 경계 넘어 shift되면 값이 틀어짐
+    a = pd.DataFrame({"date": pd.bdate_range("2024-01-01", periods=10),
+                      "ticker": "A", "adj_close": range(10, 20)})
+    b = pd.DataFrame({"date": pd.bdate_range("2024-01-01", periods=10),
+                      "ticker": "B", "adj_close": range(100, 110)})
+    out = add_target_per_ticker(pd.concat([a, b]), h=3)
+    assert "ticker" in out.columns
+    ta = out[out.ticker == "A"].sort_values("date")
+    # A의 첫 행 타깃 = adj_close[3]/adj_close[0]-1 = 13/10-1 (B로 새지 않음)
+    assert abs(ta["target_ret_3d"].iloc[0] - (13 / 10 - 1)) < 1e-9
+    # 각 종목 마지막 h행은 NaN
+    assert ta["target_ret_3d"].tail(3).isna().all()

@@ -32,6 +32,7 @@ sp-pipeline = "stock_prediction.pipeline:main"
 sp-poc = "stock_prediction.poc:main"
 sp-baseline = "stock_prediction.baseline:main"
 sp-stage2 = "stock_prediction.stage2:main"
+sp-horizon = "stock_prediction.horizon_sweep:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

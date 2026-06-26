@@ -88,7 +88,8 @@ cp .env.example .env       # API 키 채우기 (DART, FRED, Naver는 무료)
 | 0. PoC | ✅ 완료 | `sp-poc` — 삼성·AAPL 실데이터 수집·정규화·피처·타깃 |
 | 1. 베이스라인 | ✅ 완료 | `sp-baseline` — 가격피처만 / [결과](docs/stage1-baseline-results.md): IC≈0, 벤치마크 미달 |
 | 2. 펀더멘털 | ✅ 완료 | `sp-stage2` — PIT 재무 추가 / [결과](docs/stage2-fundamental-results.md): 개선 비결정적 |
-| ★ 표본확대 | ✅ 완료 | 한국+미국 50종목 재실행 / [결과](docs/stage-expanded-kr-us-results.md): 큰 표본에서도 신호 미확인(견고) |
+| ★ 표본확대 | ✅ 완료 | 한국+미국 50종목 재실행 / [결과](docs/stage-expanded-kr-us-results.md): 큰 표본에서도 단기 신호 미확인(견고) |
+| ★ 기간스윕 | ✅ 완료 | `sp-horizon` 5/20/60일 / [결과](docs/horizon-sweep-results.md): **펀더멘털 RankIC 기여가 기간과 함께↑, 60일서 0.13 — 첫 실질 신호** |
 | 3. 레짐 | ⬜ 예정 | 거시지표 추가 |
 | 4. 심리 | ⬜ 예정 | 뉴스/검색 감성 추가 |
 
