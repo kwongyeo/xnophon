@@ -99,7 +99,8 @@ cp .env.example .env       # API 키 채우기 (DART, FRED, Naver는 무료)
 | ★ 시장중립 | ✅ 완료 | `sp-neutral` / [결과](docs/market-neutral-results.md): **시장 내 정규화로 샤프↑, MDD -33%→-11% — 신호가 시장 내부서도 유효** |
 | ★ 최종결합 | ✅ 완료 | `sp-final` / [결과](docs/capstone-results.md): 분기+시장중립+레짐필터 누적 ablation |
 | ★ 장기검증 | ✅ 완료 | 5년 재실행 / [결과](docs/longer-history-validation.md): **C1·C2 견고, C3(레짐필터)는 과최적화로 교정 — 약세장 포함 샤프 ~1.0** |
-| 4. 심리 | ⬜ 예정 | 뉴스/검색 감성 추가 |
+| ★ 섹터중립 | ✅ 완료 | `sp-sector` / [결과](docs/sector-neutral-results.md): 비결정적 — 45종목·9섹터(일부 1~3종목)로 검증 불가, 넓은 유니버스 필요 |
+| 4. 심리 | ✅ 완료 | `sp-stage4` / [결과](docs/stage4-attention-results.md): **검색 관심도는 기여 없음(음의 결과) — 검색량은 방향성 없는 프록시, 진짜 감성모델 필요** |
 
 ### 핵심 결과 (누적 ablation, h=20 롱숏 LightGBM, **5년·2022 약세장 포함**)
 
