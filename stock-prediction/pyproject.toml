@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "stock-prediction"
+version = "0.1.0"
+description = "한국·미국 주식 수익률 예측 알고리즘 연구 파이프라인 (가격·재무·거시·심리 데이터 통합)"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "kwongyeo" }]
+dependencies = [
+    "pandas>=2.0",
+    "numpy>=1.24",
+    "pyyaml>=6.0",
+    "pyarrow>=14",          # parquet
+    "scikit-learn>=1.3",
+    "lightgbm>=4.0",
+    "finance-datareader>=0.9",
+    "pykrx>=1.0",
+    "yfinance>=0.2",
+    "requests>=2.31",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "jupyter", "matplotlib"]
+deep = ["torch>=2.1"]       # LSTM/Transformer 사용 시
+
+[project.scripts]
+sp-pipeline = "stock_prediction.pipeline:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

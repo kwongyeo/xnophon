@@ -1,0 +1,52 @@
+# 주식예측 파이프라인 설정
+# 모든 실험은 이 파일로 재현 가능해야 한다.
+
+universe:
+  market: KR              # KR | US
+  index: KOSPI200         # 유니버스 기준 (KOSPI200 / KOSDAQ150 / SP500 / 직접 리스트)
+  tickers: []             # 비우면 index 구성종목 자동 사용
+  min_market_cap: 5.0e+11 # 최소 시총 필터 (원). 소형주 노이즈 제거
+
+period:
+  start: "2018-01-01"
+  end:   "2024-12-31"
+  freq:  "1d"             # 1d | 1wk
+
+target:
+  horizon: 5             # 예측 기간 (영업일). 5 = 1주 후
+  type: "return"        # return(회귀) | direction(상승/하락 분류)
+  threshold: 0.0        # direction일 때 상승 판정 임계 수익률
+
+split:
+  scheme: "walkforward"  # 시간순 검증
+  train_window: 756      # 학습 윈도 (영업일, ≈3년)
+  test_window: 63        # 검증 윈도 (≈3개월)
+  step: 63               # 롤링 스텝
+  embargo: 5             # train/test 사이 공백(타깃 horizon 누수 방지) = horizon
+
+features:
+  technical: true        # 이동평균/RSI/MACD/변동성
+  fundamental: true      # PER/PBR/ROE/부채비율
+  macro: true            # 금리/환율/지수
+  sentiment: false       # 뉴스 감성 (단계 4에서 활성화)
+  scaling: "zscore"      # 횡단면 정규화 (zscore | rank | none)
+
+model:
+  type: "lightgbm"       # baseline | lightgbm | xgboost | lstm
+  params:
+    n_estimators: 500
+    learning_rate: 0.03
+    max_depth: 6
+    subsample: 0.8
+  seed: 42
+
+backtest:
+  top_k: 20              # 예측 상위 K종목 롱
+  rebalance: "weekly"
+  cost_bps: 25           # 왕복 거래비용 (수수료+세금+슬리피지, bp)
+
+paths:
+  raw: "data/raw"
+  interim: "data/interim"
+  processed: "data/processed"
+  external: "data/external"
