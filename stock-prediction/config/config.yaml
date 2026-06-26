@@ -41,7 +41,7 @@ model:
   seed: 42
 
 backtest:
-  top_k: 20              # 예측 상위 K종목 롱
+  top_k: 5               # 예측 상위 K종목 롱 (유니버스 크기에 맞춰 조정)
   rebalance: "weekly"
   cost_bps: 25           # 왕복 거래비용 (수수료+세금+슬리피지, bp)
 

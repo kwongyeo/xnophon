@@ -15,10 +15,14 @@
 """
 from __future__ import annotations
 
+import warnings
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
+
+# LightGBM/sklearn 의 "feature names" UserWarning 은 numpy 입력 시 무해 — 리포트 가독성 위해 억제
+warnings.filterwarnings("ignore", category=UserWarning)
 
 from .backtest import engine
 from .backtest.splitter import assign_fold_masks, walk_forward_splits

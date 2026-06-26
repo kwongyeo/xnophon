@@ -75,8 +75,24 @@ python3 -m venv .venv
 cp .env.example .env       # API 키 채우기 (DART, FRED, Naver는 무료)
 # 설정 수정: config/config.yaml (유니버스/기간/타깃)
 
+.venv/bin/sp-poc           # 0단계 PoC (삼성·AAPL 시세+재무 수집→정규화→피처/타깃)
+.venv/bin/sp-baseline      # 1단계 베이스라인 (워크포워드 횡단면 예측+백테스트)
 .venv/bin/sp-pipeline      # 전체 파이프라인 (수집→피처→학습→백테스트)
 ```
+
+## 구현 진행 (단계별 로드맵)
+
+| 단계 | 상태 | 산출물 |
+|---|---|---|
+| 0. PoC | ✅ 완료 | `sp-poc` — 삼성·AAPL 실데이터 수집·정규화·피처·타깃 |
+| 1. 베이스라인 | ✅ 완료 | `sp-baseline` — 가격피처만 / [결과](docs/stage1-baseline-results.md): IC≈0, 벤치마크 미달 |
+| 2. 펀더멘털 | ⬜ 예정 | DART/yfinance 재무(point-in-time) 추가 |
+| 3. 레짐 | ⬜ 예정 | 거시지표 추가 |
+| 4. 심리 | ⬜ 예정 | 뉴스/검색 감성 추가 |
+
+> 단계1 핵심 결과: **가격/기술적 피처만으로는 횡단면 예측 신호가 사실상 없으며
+> (IC≈0), 상위 K종목 전략이 동일가중 벤치마크를 위험조정 기준으로 이기지 못한다.**
+> 이는 정상적인 기준선이며, 이후 단계가 넘어야 할 기준이다. 상세: [docs/stage1-baseline-results.md](docs/stage1-baseline-results.md)
 
 ## 도입할 데이터
 

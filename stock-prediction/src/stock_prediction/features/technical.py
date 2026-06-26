@@ -9,11 +9,13 @@ import pandas as pd
 
 
 def _rsi(close: pd.Series, window: int = 14) -> pd.Series:
+    import numpy as np
+
     delta = close.diff()
     gain = delta.clip(lower=0).rolling(window).mean()
     loss = (-delta.clip(upper=0)).rolling(window).mean()
-    rs = gain / loss.replace(0, pd.NA)
-    return 100 - 100 / (1 + rs)
+    rs = gain / loss.replace(0, np.nan)
+    return (100 - 100 / (1 + rs)).astype("float64")
 
 
 def add_technical_features(prices: pd.DataFrame) -> pd.DataFrame:
