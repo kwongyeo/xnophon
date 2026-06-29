@@ -34,3 +34,20 @@ def test_price_normalize_and_features():
     # rolling 피처는 초기 구간 NaN, 후반부는 채워져야 함
     assert feat["ma_20"].tail(1).notna().all()
     assert feat["rsi_14"].tail(1).notna().all()
+
+
+def test_refresh_price_writer_roundtrip(tmp_path):
+    """sp-refresh의 _write_price 출력이 normalize_price로 그대로 읽혀야(포맷 계약)."""
+    import pandas as pd
+    from stock_prediction.refresh_data import _write_price
+    idx = pd.date_range("2026-06-20", periods=4, freq="D", tz="America/New_York")
+    df = pd.DataFrame({"Open": [1, 2, 3, 4.0], "High": [1, 2, 3, 4.0],
+                       "Low": [1, 2, 3, 4.0], "Close": [10, 11, 12, 13.0],
+                       "Volume": [100, 200, 300, 400], "Dividends": [0, 0, 0, 0.0],
+                       "Stock Splits": [0, 0, 0, 0.0]}, index=idx)
+    p = tmp_path / "TEST.json"
+    assert _write_price(df, p) == 4
+    px = yfinance_us.normalize_price(yfinance_us.load_raw(p), "TEST")
+    assert list(px.columns) == PRICE_COLUMNS
+    assert px["date"].is_monotonic_increasing
+    assert px["close"].iloc[-1] == 13.0

@@ -43,6 +43,7 @@ sp-stage4 = "stock_prediction.stage4:main"
 sp-picks = "stock_prediction.picks:main"
 sp-paper = "stock_prediction.paper_trade:main"
 sp-notify = "stock_prediction.notify_telegram:main"
+sp-refresh = "stock_prediction.refresh_data:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
