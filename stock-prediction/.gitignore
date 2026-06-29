@@ -14,6 +14,8 @@ data/processed/*
 data/external/*
 !data/**/.gitkeep
 
-# 모의투자 장부는 사용자별 런타임 기록 (커밋 안 함)
+# 모의투자 장부·산출물은 사용자별 런타임 기록 (커밋 안 함)
 paper_trades/*.csv
+paper_trades/*.png
+paper_trades/*.log
 !paper_trades/.gitkeep
