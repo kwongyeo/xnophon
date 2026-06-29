@@ -116,6 +116,16 @@ crontab -e
 
 이렇게 매월 자동 적재하고, 가끔 `sp-paper report`로 누적 성과·벤치마크 대비를 확인한다.
 
+#### 텔레그램 알림 (sp-notify)
+
+랭킹을 텔레그램으로 받는다. `.env`에 봇 토큰·chat_id 설정(발급법은 `.env.example` 참조):
+```bash
+sp-notify 60            # 3개월 랭킹 발송(토큰 있으면 발송, 없으면 dry-run 출력)
+sp-notify 60 --dry-run  # 발송 없이 메시지 미리보기
+# cron(매월 1일 09:05):
+5 9 1 * * cd /path/to/stock-prediction && PYTHONPATH=src python -m stock_prediction.notify_telegram 60 >> paper_trades/notify.log 2>&1
+```
+
 ## 구현 진행 (단계별 로드맵)
 
 | 단계 | 상태 | 산출물 |

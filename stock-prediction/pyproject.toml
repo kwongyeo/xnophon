@@ -42,6 +42,7 @@ sp-sector = "stock_prediction.sector_neutral:main"
 sp-stage4 = "stock_prediction.stage4:main"
 sp-picks = "stock_prediction.picks:main"
 sp-paper = "stock_prediction.paper_trade:main"
+sp-notify = "stock_prediction.notify_telegram:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
