@@ -118,10 +118,15 @@ crontab -e
 
 #### 텔레그램 알림 (sp-notify)
 
-랭킹을 텔레그램으로 받는다. `.env`에 봇 토큰·chat_id 설정(발급법은 `.env.example` 참조):
+랭킹을 텔레그램으로 받는다. `.env`에 봇 토큰·chat_id 설정(발급법은 `.env.example` 참조).
+환경변수명(`TELEGRAM_BOT_TOKEN`·`TELEGRAM_CHAT_ID`)은 일반적인 stock-lab 설정과 동일하므로
+**기존에 쓰던 같은 값을 그대로 재사용**하면 된다.
 ```bash
+sp-notify status        # telegram_configured: true/false 확인
+sp-notify test          # "주탐주예 notify test" 발송 테스트
 sp-notify 60            # 3개월 랭킹 발송(토큰 있으면 발송, 없으면 dry-run 출력)
 sp-notify 60 --dry-run  # 발송 없이 메시지 미리보기
+sp-notify send --subject "체결" --body "INTC 100주 매수"   # 임의 메시지
 # cron(매월 1일 09:05):
 5 9 1 * * cd /path/to/stock-prediction && PYTHONPATH=src python -m stock_prediction.notify_telegram 60 >> paper_trades/notify.log 2>&1
 ```
