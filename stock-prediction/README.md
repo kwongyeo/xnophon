@@ -93,8 +93,21 @@ sp-paper report     # 장부의 모든 포지션을 최신가로 평가(실현/�
 ```
 
 `sp-paper`는 추천을 `paper_trades/ledger.csv`에 진입가와 함께 쌓고, `report`가 매번
-최신 가격으로 수익·승률·청산여부를 재계산한다(왕복비용 25bp 반영). 실제로는 매월
-`sp-paper record` 한 번씩 돌려 추천을 누적하고 주기적으로 `report`로 추적하면 된다.
+최신 가격으로 수익·승률·청산여부를 재계산한다. `report`는 다음을 반영:
+- **시장별 현실 비용**: KR 왕복 ~30bp(매도 거래세 18bp+수수료+슬리피지), US 왕복 ~110bp
+  (원↔달러 환전 스프레드 ~100bp+수수료). 값은 `paper_trade.COST_BPS`에서 조정.
+- **벤치마크 대비 초과수익**: 각 포지션을 같은 보유기간의 KOSPI(KR)·S&P500(US)과 비교.
+  "초과 = 순수익 − 벤치마크", "벤치초과율 = 지수를 이긴 비율".
+
+#### 월별 자동 기록 (cron)
+
+```bash
+crontab -e
+# 매월 1일 09:00 에 그 시점 추천을 장부에 기록(2개월 horizon)
+0 9 1 * * /path/to/stock-prediction/scripts/monthly_record.sh 40 >> /path/to/stock-prediction/paper_trades/cron.log 2>&1
+```
+
+이렇게 매월 자동 적재하고, 가끔 `sp-paper report`로 누적 성과·벤치마크 대비를 확인한다.
 
 ## 구현 진행 (단계별 로드맵)
 
