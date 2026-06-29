@@ -1,0 +1,12 @@
+{
+  "stock_code": "AAPL",
+  "market": "US",
+  "cumulative": false,
+  "quarters": [
+    {"period_end": "2026-03-31", "revenue": 111184000000.0, "op_income": 35885000000.0, "net_income": 29578000000.0, "assets": 371082000000.0, "equity": 106491000000.0},
+    {"period_end": "2025-12-31", "revenue": 143756000000.0, "op_income": 50852000000.0, "net_income": 42097000000.0, "assets": 379297000000.0, "equity": 88190000000.0},
+    {"period_end": "2025-09-30", "revenue": 102466000000.0, "op_income": 32427000000.0, "net_income": 27466000000.0, "assets": 359241000000.0, "equity": 73733000000.0},
+    {"period_end": "2025-06-30", "revenue": 94036000000.0, "op_income": 28202000000.0, "net_income": 23434000000.0, "assets": 331495000000.0, "equity": 65830000000.0},
+    {"period_end": "2025-03-31", "revenue": 95359000000.0, "op_income": 29589000000.0, "net_income": 24780000000.0, "assets": 331233000000.0, "equity": 66796000000.0}
+  ]
+}

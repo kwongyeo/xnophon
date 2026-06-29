@@ -1,0 +1,9 @@
+{"stock_code":"034730","corp_code":"00181712","market":"KR","cumulative":true,
+ "quarters":[
+  {"period":"2024Q1","disclosed_at":"2024-05-16","revenue":33026813000000,"op_income":1537210000000,"net_income":725252000000,"assets":216105662000000,"liabilities":136056894000000,"equity":80048768000000},
+  {"period":"2024Q2","disclosed_at":"2024-08-14","revenue":31197130000000,"op_income":756204000000,"net_income":454132000000,"assets":214980757000000,"liabilities":131904282000000,"equity":83076475000000},
+  {"period":"2024Q3","disclosed_at":"2024-11-14","revenue":30637299000000,"op_income":513076000000,"net_income":1147873000000,"assets":209472868000000,"liabilities":127708775000000,"equity":81764093000000},
+  {"period":"2025Q1","disclosed_at":"2025-05-15","revenue":31229933000000,"op_income":399781000000,"net_income":3590712000000,"assets":217739474000000,"liabilities":137910344000000,"equity":79829130000000},
+  {"period":"2025Q2","disclosed_at":"2025-08-14","revenue":30141963000000,"op_income":199554000000,"net_income":976811000000,"assets":206385526000000,"liabilities":128422973000000,"equity":77962553000000},
+  {"period":"2025Q3","disclosed_at":"2025-11-14","revenue":31041366000000,"op_income":827400000000,"net_income":2679989000000,"assets":215316724000000,"liabilities":129405619000000,"equity":85911105000000}
+ ]}
