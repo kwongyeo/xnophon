@@ -48,6 +48,49 @@ def _names() -> dict:
     return m
 
 
+def rank_asof(asof=None, horizon: int = H, topk: int = TOPK, cfg=None) -> pd.DataFrame:
+    """as-of 시점 기준 시장별 상위 picks(누수 없음).
+
+    학습은 '타깃 관측 종료일 ≤ asof'인 과거만 사용 → 모의투자 기록에 안전.
+    반환: market, ticker, name, entry_date, entry_price, pred, horizon.
+    """
+    cfg = cfg or load_config()
+    names = _names()
+    base = load_universe_panel(horizon)
+    base["market"] = base["ticker"].map(market_of)
+    base = add_fundamental_features(base, load_fundamentals_combined(FUND, FUND_Q))
+    panel = add_target_per_ticker(base, horizon)
+    target = f"target_ret_{horizon}d"
+    z = cross_sectional_zscore(panel, STOCK, by=["market"])
+    feat_ok = z.dropna(subset=STOCK)
+
+    alldates = np.sort(feat_ok["date"].unique())
+    asof = pd.Timestamp(asof) if asof is not None else pd.Timestamp(alldates[-1])
+    past = alldates[alldates <= asof]
+    if len(past) <= horizon + 5:
+        return pd.DataFrame()
+    cutoff = past[-(horizon + 1)]  # 이 날 이전 진입분만 타깃이 asof까지 관측됨
+    train = feat_ok[feat_ok["date"] <= cutoff].dropna(subset=[target])
+    model = TreeModel(cfg["model"]["params"], seed=cfg["model"]["seed"]).fit(
+        train[STOCK].to_numpy(), train[target].to_numpy())
+
+    out = []
+    for mk in ("KR", "US"):
+        sub = feat_ok[(feat_ok["market"] == mk) & (feat_ok["date"] <= asof)]
+        if sub.empty:
+            continue
+        d = sub["date"].max()
+        rows = sub[sub["date"] == d].copy()
+        rows["pred"] = model.predict(rows[STOCK].to_numpy())
+        for _, r in rows.nlargest(topk, "pred").iterrows():
+            out.append({"market": mk, "ticker": r["ticker"],
+                        "name": names.get(r["ticker"], r["ticker"]),
+                        "entry_date": pd.Timestamp(d).date().isoformat(),
+                        "entry_price": float(r["adj_close"]),
+                        "pred": float(r["pred"]), "horizon": horizon})
+    return pd.DataFrame(out)
+
+
 def main() -> None:
     import sys
     h = int(sys.argv[1]) if len(sys.argv) > 1 and sys.argv[1].isdigit() else H

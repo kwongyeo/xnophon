@@ -83,6 +83,19 @@ cp .env.example .env       # API 키 채우기 (DART, FRED, Naver는 무료)
 .venv/bin/sp-pipeline      # 전체 파이프라인 (수집→피처→학습→백테스트)
 ```
 
+### 실전 활용 도구 (연구·교육용, 투자자문 아님)
+
+```bash
+sp-picks            # 최신 단면 모델 랭킹(기본 2개월). sp-picks 60 = 3개월
+sp-paper record 40  # 모의투자: 현재 추천을 장부에 기록(2개월 horizon)
+sp-paper record 40 2026-01-15   # 과거 시점으로 기록(누수 없이) — 백테스트형 검증
+sp-paper report     # 장부의 모든 포지션을 최신가로 평가(실현/미실현 수익·승률)
+```
+
+`sp-paper`는 추천을 `paper_trades/ledger.csv`에 진입가와 함께 쌓고, `report`가 매번
+최신 가격으로 수익·승률·청산여부를 재계산한다(왕복비용 25bp 반영). 실제로는 매월
+`sp-paper record` 한 번씩 돌려 추천을 누적하고 주기적으로 `report`로 추적하면 된다.
+
 ## 구현 진행 (단계별 로드맵)
 
 | 단계 | 상태 | 산출물 |

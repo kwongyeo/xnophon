@@ -40,6 +40,8 @@ sp-neutral = "stock_prediction.neutral:main"
 sp-final = "stock_prediction.capstone:main"
 sp-sector = "stock_prediction.sector_neutral:main"
 sp-stage4 = "stock_prediction.stage4:main"
+sp-picks = "stock_prediction.picks:main"
+sp-paper = "stock_prediction.paper_trade:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
