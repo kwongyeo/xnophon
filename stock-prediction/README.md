@@ -89,8 +89,15 @@ cp .env.example .env       # API 키 채우기 (DART, FRED, Naver는 무료)
 sp-picks            # 최신 단면 모델 랭킹(기본 2개월). sp-picks 60 = 3개월
 sp-paper record 40  # 모의투자: 현재 추천을 장부에 기록(2개월 horizon)
 sp-paper record 40 2026-01-15   # 과거 시점으로 기록(누수 없이) — 백테스트형 검증
-sp-paper report     # 장부의 모든 포지션을 최신가로 평가(실현/미실현 수익·승률)
+sp-paper report     # 장부의 모든 포지션을 최신가로 평가(원화 기준)
+sp-paper report 15  # 15% 손절 규칙 시뮬레이션 적용
 ```
+
+`report`는 **원화(KRW) 기준**으로 평가한다(미국 포지션은 실제 USD/KRW 환율 반영):
+- **원화순익**: US는 환율 레벨변동 + 환전 스프레드(왕복 ~50bp) 포함. `현지` 컬럼은 현지통화 참고치.
+- **손절 시뮬**(`report N`): 보유 중 종가가 진입가×(1−N%) 이하로 내려가면 그날 청산.
+- **누적 자산곡선**: 활성 포지션 동일가중 일별 NAV → 터미널 스파크라인 +
+  `paper_trades/equity_curve.csv` + `equity_curve.png`(matplotlib 있을 때). 벤치마크(KRW) 동시 표시.
 
 `sp-paper`는 추천을 `paper_trades/ledger.csv`에 진입가와 함께 쌓고, `report`가 매번
 최신 가격으로 수익·승률·청산여부를 재계산한다. `report`는 다음을 반영:
