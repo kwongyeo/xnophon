@@ -6,3 +6,7 @@ build/
 dist/
 results/
 .env
+comfyui-music/config.json
+comfyui-music/output/
+comfyui-music/comfyui.log
+comfyui-music/*.bat
