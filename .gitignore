@@ -6,3 +6,6 @@ build/
 dist/
 results/
 .env
+
+# 회귀분석 스킬 전용 venv (재현은 setup_env.sh)
+.venv-stats/

@@ -1,0 +1,39 @@
+# statistical-regression-analysis 스킬 — 헤드리스 회귀분석 Python 스택
+# 이 컨테이너(Ubuntu 24.04)에서 설치·검증. venv 권장(시스템 scipy 충돌 회피).
+
+# 핵심 수치/데이터
+numpy>=1.26
+pandas>=2.0
+scipy>=1.11
+patsy>=0.5
+
+# 일반 회귀·GLM·시계열·혼합효과 (OLS, Logit, Probit, Poisson, NegBin,
+#   MixedLM, QuantReg, RLM, MNLogit, OrderedModel, ARIMA, VAR)
+statsmodels>=0.14
+
+# 패널 (FE/RE/FD/Between/Pooled, FamaMacBeth) + 도구변수(IV/2SLS)
+linearmodels>=6.0
+
+# 동적 패널 GMM (Arellano-Bond / Blundell-Bond)
+pydynpd>=0.2
+
+# 정규화·머신러닝 회귀 (Ridge/Lasso/ElasticNet/로지스틱/트리)
+scikit-learn>=1.3
+
+# 공간 회귀·공간 패널 (PySAL)
+spreg>=1.4
+libpysal>=4.8
+esda>=2.5
+
+# 공간 데이터 입출력
+geopandas>=0.14
+
+# 엑셀 입력
+openpyxl>=3.1
+xlrd>=2.0
+
+# 진단 그래프
+matplotlib>=3.7
+
+# 표 출력
+tabulate>=0.9
