@@ -89,6 +89,13 @@ start web\\index.html          # Windows
 | KOSIS | MCP 서버 | 국가통계포털 통계 데이터. `korean-stat-mcp`를 `.mcp.json`에 등록. **설정은 [docs/kosis-mcp-setup.md](docs/kosis-mcp-setup.md) 참조** |
 | 공공데이터포털 | MCP 서버 | data.go.kr 공공데이터(사업자등록·국민연금·나라장터·기업재무·대통령연설·MSDS 6종). `data-go-mcp` 서버군을 `.mcp.json`에 등록. **설정은 [docs/data-go-mcp-setup.md](docs/data-go-mcp-setup.md) 참조** |
 
+## Claude 스킬: 통계 데이터 수집·표본추출
+
+`.claude/skills/statistical-kosis-datagokr-data-acquisition-sampling/` — KOSIS·data.go.kr 수집
+(MCP 우선, REST 대체), egress·키 사전점검, 40,000셀 자동 분할, 페이지네이션, manifest·출처 표기,
+층화·계통·군집 표본추출과 가중 추정(±SE, 95% CI)을 묶은 Claude Code 스킬.
+REST/표본 CLI는 `scripts/acquire.py` (표준 라이브러리만 사용).
+
 ## 라이선스
 
 MIT
