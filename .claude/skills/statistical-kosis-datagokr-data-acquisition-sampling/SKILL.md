@@ -42,8 +42,9 @@ python <skill-dir>/scripts/acquire.py preflight
 
 1. **MCP 도구가 보이고 호스트 도달 가능** → MCP 경로 (A). 도구 이름은 `korean-stat` 서버의 `search_statistics` 등, `data-go-*` 서버의 `search_business` 등.
 2. **MCP는 없지만 호스트 도달 가능, 키 있음** → REST 경로 (B), `acquire.py` 사용.
+   - 위 둘이 안 되면 **세션에 연결된 다른 한국 데이터 커넥터**(예: PlayMCP `koreaStat-*`, `koreaProcurement-*`)를 ToolSearch로 찾아본다 (C). 사용자가 연결해 둔 커넥터는 승인된 도구라서 써도 되고, 이 환경의 egress를 우회하는 것이 아니다. 대신 이런 커넥터는 기간·지역·건수 범위가 제한된 경우가 많다(예: 최근 30일, 페이지당 15건, 일부 시도 누락). 그래서 작게 한 번 호출해 **요청 범위를 다 덮는지 먼저 확인**하고, 다 덮지 못하면 부분 데이터로 결론을 만들지 말고 무엇이 빠졌는지 보고한다. 결과를 쓸 때는 공식 원출처(KOSIS 통계표 ID 등)와 커넥터 경유라는 점을 함께 적는다.
 3. **키 MISSING** → `references/setup.md`의 발급 경로를 안내한다. Claude는 사용자의 브라우저 로그인 세션에 접근할 수 없으므로 키를 대신 발급할 수 없다. 사용자가 키를 채팅에 붙여넣으면 값을 다시 출력하지 말고 `.env`에 기록한 뒤 재발급을 권한다.
-4. **호스트 BLOCKED (프록시 403)** → 우회하지 않는다 (다른 프록시·미러·스크래핑 금지). 차단된 호스트를 보고하고, 사용자 PC에서 그대로 돌릴 수 있는 명령(아래 4~6단계 명령)을 만들어 준다. 표본설계·추정 단계는 사용자가 가진 CSV로 이 환경에서도 진행할 수 있다.
+4. **호스트 BLOCKED (프록시 403)이고 쓸 만한 커넥터도 없음** → 네트워크 차단 자체를 우회하지 않는다: 다른 프록시·터널, `HTTPS_PROXY` 해제, TLS 검증 끄기, 비공식 미러·스크래핑 사이트는 쓰지 않는다 (조직 정책 위반이고, 비공식 사본은 수치를 검증할 수 없다). 차단된 호스트를 보고하고, 사용자 PC에서 그대로 돌릴 수 있는 명령(아래 4~6단계)을 만들어 주며, Claude Code on the web이면 환경 설정의 허용 도메인에 해당 호스트를 추가하는 방법도 알려 준다. 표본설계·추정 단계는 사용자가 가진 CSV로 이 환경에서도 진행할 수 있다.
 
 ## 4단계 — 탐색과 시범조회
 
@@ -82,19 +83,24 @@ manifest의 `complete`가 `false`면(페이지 한도·트래픽 한도로 중�
 
 KOSIS 집계표는 이미 공표 통계라서, 거기서 "샘플"을 원하면 대개 미리보기(시범조회)나 하위집합 필터링이다. 이런 경우는 확률표본이 아니므로 가중치를 붙이지 않고 "표본"이라 부르지 않는다. 확률표본은 주로 data.go.kr 레코드 모집단에서 뽑는다. 설계 선택 기준과 표본 크기 공식은 `references/sampling-design.md`를 읽는다.
 
+설계 전에 두 가지를 짚는다:
+- **추정하려는 값이 이미 틀(모집단 파일)에 전부 있으면** 표본 추정보다 전수 합계가 정확하다. 그 사실을 먼저 말하고 전수값을 함께 제시한다. 이때 표본은 틀에 없는 항목(설문·현장확인·상세 API 조회)을 표본 단위에만 조사하거나 설계를 검증하는 용도다.
+- **네이만 배분과 전수층 기준에는 조사 전에 알려진 보조변수**(전년도 값, 규모 변수 등)를 쓴다. 추정 대상 변수 자체로 배분하면 순환이 되고, 실제 조사에서는 그 값을 미리 알 수 없다. 적당한 보조변수가 없으면 비례배분이 안전한 기본값이다.
+
 ```bash
-# 층화(시도) 네이만 배분 400건, 재현 가능한 시드
+# 층화(시도) 300건: 비례배분 + 대규모 사업장 전수층, ID 정렬로 행 순서와 무관하게 재현
 python <skill-dir>/scripts/acquire.py sample --input results/…/data.csv --method stratified \
-  --strata 시도 --allocation neyman --value 가입자수 --n 400 --min-per-stratum 2 \
+  --strata 시도 --allocation proportional --n 300 --min-per-stratum 2 \
+  --id-col 사업장ID --value 전년도_가입자수 --take-all-above 200 \
   --seed 20260626 --out results/…/sample.csv
-# → sample.csv(_stratum, _weight 컬럼 추가) + sample.design.json
+# → sample.csv(_stratum, _weight 컬럼 추가) + sample.design.json(시드·입력 SHA-256·층별 N_h/n_h)
 
 python <skill-dir>/scripts/acquire.py estimate --sample results/…/sample.csv \
   --design results/…/sample.design.json --value 가입자수
 # → 총계·평균 추정치, 표준오차(fpc 반영), 95% 신뢰구간 (군집은 t(m−1))
 ```
 
-시드는 항상 기록한다. 같은 시드와 같은 입력이면 같은 표본이 나오며, 이것이 표본의 감사 추적이 된다. 층에 n_h=1이면 분산을 추정할 수 없으니 `--min-per-stratum 2`를 쓴다.
+재현성은 시드 + 입력 SHA-256 + `--id-col`로 보장한다 (design.json에 모두 기록됨). `--id-col` 없이 뽑으면 같은 시드여도 입력 행 순서가 바뀌는 순간 다른 표본이 나온다. 층에 n_h=1이면 분산을 추정할 수 없으니 `--min-per-stratum 2`를 쓴다. 값의 분포 꼬리가 길면(소수 대형 단위) 신뢰구간이 명목 95%보다 좁게 나오기 쉬우므로, `--take-all-above`로 대형 단위를 전수층에 넣고, 그래도 남는 한계는 보고서에 적는다.
 
 ## 7단계 — 검증
 

@@ -423,9 +423,21 @@ def cmd_sample(args) -> None:
     N = len(rows)
     if N == 0:
         sys.exit("[error] 입력 CSV가 비어 있습니다.")
+    if args.id_col:
+        # 같은 틀이면 행 순서가 달라도 같은 표본이 나오도록 고유 ID로 정렬한 뒤 추출한다.
+        if args.id_col not in rows[0]:
+            sys.exit(f"[error] --id-col '{args.id_col}' 컬럼이 없습니다: {list(rows[0])}")
+        ids = [r[args.id_col] for r in rows]
+        if len(set(ids)) != N:
+            sys.exit(f"[error] --id-col '{args.id_col}' 값이 고유하지 않습니다 (중복 {N - len(set(ids))}건).")
+        rows.sort(key=lambda r: r[args.id_col])
+    else:
+        log("[warn] --id-col 미지정: 같은 시드라도 입력 행 순서가 바뀌면 다른 표본이 나옵니다.")
     rng = random.Random(args.seed)
     target = args.n if args.n else max(1, round(N * args.frac))
-    design: dict = {"method": args.method, "seed": args.seed, "N": N, "input": args.input}
+    design: dict = {"method": args.method, "seed": args.seed, "N": N, "input": args.input,
+                    "input_sha256": hashlib.sha256(Path(args.input).read_bytes()).hexdigest(),
+                    "id_col": args.id_col}
     picked: list[dict] = []
 
     if args.method in ("srs", "systematic"):
@@ -446,8 +458,18 @@ def cmd_sample(args) -> None:
         if not args.strata:
             sys.exit("[error] stratified는 --strata 컬럼이 필요합니다.")
         groups: dict = defaultdict(list)
+        certainty: list[dict] = []
+        if args.take_all_above is not None and not args.value:
+            sys.exit("[error] --take-all-above는 규모 기준 수치 컬럼 --value가 필요합니다.")
         for r in rows:
-            groups[tuple(r.get(c, "") for c in args.strata)].append(r)
+            x = _to_float(r.get(args.value, "")) if args.take_all_above is not None else None
+            if x is not None and x >= args.take_all_above:
+                certainty.append(r)  # 대규모 단위는 전수 포함 (가중치 1, 분산 기여 0)
+            else:
+                groups[tuple(r.get(c, "") for c in args.strata)].append(r)
+        if len(certainty) >= target:
+            sys.exit(f"[error] 전수층 {len(certainty)}건이 표본 크기 {target} 이상입니다. 임계값을 올리세요.")
+        target -= len(certainty)
         sizes = {h: len(g) for h, g in groups.items()}
         sds = None
         if args.allocation == "neyman":
@@ -463,8 +485,14 @@ def cmd_sample(args) -> None:
             for r in rng.sample(g, nh):
                 picked.append({**r, "_stratum": label, "_weight": sizes[h] / nh if nh else 0})
             strata_info[label] = {"N_h": sizes[h], "n_h": nh}
+        if certainty:
+            for r in certainty:
+                picked.append({**r, "_stratum": "__take_all__", "_weight": 1.0})
+            strata_info["__take_all__"] = {"N_h": len(certainty), "n_h": len(certainty),
+                                           "rule": f"{args.value} >= {args.take_all_above}"}
         design.update({"strata_columns": args.strata, "allocation": args.allocation,
-                       "strata": strata_info, "n": sum(alloc.values())})
+                       "allocation_variable": args.value if args.allocation == "neyman" else None,
+                       "strata": strata_info, "n": sum(v["n_h"] for v in strata_info.values())})
 
     elif args.method == "cluster":
         if not args.cluster:
@@ -609,10 +637,13 @@ def main(argv: list[str] | None = None) -> None:
     s.add_argument("--frac", type=float, help="추출 비율 (0~1)")
     p.add_argument("--strata", nargs="+", help="층화 컬럼(복수 가능)")
     p.add_argument("--allocation", choices=["proportional", "equal", "neyman"], default="proportional")
-    p.add_argument("--value", help="neyman 배분용 수치 컬럼")
+    p.add_argument("--value", help="neyman 배분·전수층 기준용 보조 수치 컬럼 (조사 전 알려진 값)")
     p.add_argument("--min-per-stratum", type=int, default=1)
     p.add_argument("--cluster", help="군집 컬럼")
     p.add_argument("--sort-by", help="계통추출 전 정렬 컬럼(암묵적 층화)")
+    p.add_argument("--id-col", help="고유 ID 컬럼 — 지정하면 행 순서와 무관하게 재현 (권장)")
+    p.add_argument("--take-all-above", type=float,
+                   help="stratified: --value가 이 값 이상인 단위는 전수층으로 모두 포함")
     p.add_argument("--seed", type=int, default=20260626)
     p.add_argument("--out", required=True, help="표본 CSV 경로 (설계는 .design.json으로 저장)")
     p.set_defaults(func=cmd_sample)
